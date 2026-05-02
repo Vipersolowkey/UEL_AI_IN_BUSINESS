@@ -1,0 +1,34 @@
+hotel,market_segment,deposit_type,total_bookings,canceled_bookings,cancellation_rate_pct
+Resort Hotel,Offline TA/TO,Refundable,2,2,100.0
+Resort Hotel,Online TA,Refundable,6,6,100.0
+City Hotel,Undefined,No Deposit,2,2,100.0
+City Hotel,Direct,Refundable,1,1,100.0
+City Hotel,Online TA,Refundable,12,12,100.0
+City Hotel,Offline TA/TO,Non Refund,4855,4854,99.98
+City Hotel,Groups,Non Refund,7660,7656,99.95
+Resort Hotel,Offline TA/TO,Non Refund,151,149,98.68
+Resort Hotel,Online TA,Non Refund,30,29,96.67
+Resort Hotel,Groups,Non Refund,1512,1454,96.16
+City Hotel,Corporate,Non Refund,309,294,95.15
+City Hotel,Online TA,Non Refund,26,24,92.31
+City Hotel,Direct,Non Refund,18,16,88.89
+Resort Hotel,Corporate,Non Refund,25,18,72.0
+City Hotel,Online TA,No Deposit,38454,14376,37.38
+Resort Hotel,Online TA,No Deposit,17693,6213,35.12
+City Hotel,Groups,No Deposit,6298,1964,31.18
+City Hotel,Corporate,Refundable,4,1,25.0
+Resort Hotel,Groups,No Deposit,4190,1007,24.03
+City Hotel,Aviation,No Deposit,235,52,22.13
+Resort Hotel,Direct,Refundable,5,1,20.0
+City Hotel,Offline TA/TO,No Deposit,11852,2311,19.5
+City Hotel,Direct,No Deposit,6024,1032,17.13
+Resort Hotel,Complementary,No Deposit,201,33,16.42
+Resort Hotel,Corporate,No Deposit,2280,333,14.61
+Resort Hotel,Direct,No Deposit,6504,877,13.48
+Resort Hotel,Offline TA/TO,No Deposit,7317,985,13.46
+City Hotel,Corporate,No Deposit,2664,345,12.95
+City Hotel,Complementary,No Deposit,523,55,10.52
+Resort Hotel,Groups,Refundable,129,13,10.08
+Resort Hotel,Direct,Non Refund,1,0,0.0
+City Hotel,Offline TA/TO,Refundable,2,0,0.0
+City Hotel,Groups,Refundable,1,0,0.0
