@@ -1,6 +1,6 @@
 # Dự án: Quản trị & phân tích khách sạn hỗ trợ AI (UEL)
 
-*Tài liệu này giúp **giám khảo / người xem không chuyên kỹ thuật** hiểu nhanh dự án là gì, có ích gì cho nhà điều hành khách sạn, và cách mở xem trên máy tính.*
+*Tài liệu này giúp **giám khảo / người xem ** hiểu nhanh dự án là gì, có ích gì cho nhà điều hành khách sạn, và cách mở xem trên máy tính.*
 
 ---
 
