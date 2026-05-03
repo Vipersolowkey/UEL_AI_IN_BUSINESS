@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 
 import { useGuestAppBooking } from "../../components/guestapp/GuestAppBookingContext";
 import { guestAppBillExportUrl, guestAppHousekeepingRequest } from "../../lib/guestAppApi";
+import { guestAppImages } from "../../lib/guestAppImages";
 import { lightingScenes } from "../../lib/guestAppMockData";
 
 function formatAmount(amountStr) {
@@ -68,8 +69,15 @@ export default function GuestAppMe() {
   }, [bookingRef, hkNotes, notify, refreshSession]);
 
   return (
-    <div className="space-y-5">
-      <section className="rounded-3xl border border-white/10 bg-white/[0.05] p-4">
+    <div className="ga-stagger space-y-5">
+      <section className="ga-stagger-item relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.05]">
+        <img
+          src={guestAppImages.profileWelcome}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover opacity-35"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0f1714] via-[#0f1714]/88 to-[#0f1714]/50" />
+        <div className="relative p-4">
         <p className="text-lg font-semibold text-white">Xin chào, {guestName}</p>
         <p className="mt-1 text-sm text-white/60">
           Phòng {session?.room_number || "—"} · Phụ phí (minibar / giặt / spa):{" "}
@@ -83,9 +91,15 @@ export default function GuestAppMe() {
               : "—"}
           </span>
         </p>
+        </div>
       </section>
 
-      <section className="rounded-3xl border border-emerald-400/20 bg-emerald-950/25 p-4">
+      <section className="ga-stagger-item overflow-hidden rounded-3xl border border-emerald-400/20 bg-emerald-950/25">
+        <div className="relative h-24 w-full">
+          <img src={guestAppImages.housekeeping} alt="" className="h-full w-full object-cover opacity-85" />
+          <div className="absolute inset-0 bg-gradient-to-r from-emerald-950/95 to-emerald-950/35" />
+        </div>
+        <div className="p-4">
         <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-emerald-200/85">Dọn phòng</p>
         <p className="mt-1 text-xs text-white/55">Gửi yêu cầu dọn / dọn lại phòng của bạn (không xem sơ đồ toàn khách sạn ở đây).</p>
         <label className="mt-3 block text-xs text-white/55">
@@ -105,9 +119,15 @@ export default function GuestAppMe() {
         >
           {hkBusy ? "Đang gửi…" : "Yêu cầu dọn phòng"}
         </button>
+        </div>
       </section>
 
-      <section className="rounded-3xl border border-white/10 bg-white/[0.04] p-4">
+      <section className="ga-stagger-item overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04]">
+        <div className="relative h-20 w-full">
+          <img src={guestAppImages.folioDesk} alt="" className="h-full w-full object-cover opacity-50" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#0f1714]/95" />
+        </div>
+        <div className="p-4">
         <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-white/50">Folio & phụ phí</p>
         <ul className="mt-3 space-y-2">
           {lines.length === 0 ? (
@@ -144,9 +164,17 @@ export default function GuestAppMe() {
           </a>
         </div>
         <p className="mt-2 text-[0.65rem] text-white/40">Bill được tạo từ tổng tiền phòng và các dòng folio hiện có.</p>
+        </div>
       </section>
 
-      <section className="rounded-3xl border border-rose-400/25 bg-gradient-to-br from-rose-950/50 to-stone-950/60 p-4">
+      <section className="ga-stagger-item relative overflow-hidden rounded-3xl border border-rose-400/25 bg-gradient-to-br from-rose-950/50 to-stone-950/60">
+        <img
+          src={guestAppImages.giftRose}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover opacity-30"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-rose-950/90 via-rose-950/70 to-transparent" />
+        <div className="relative p-4">
         <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-rose-200/90">Ưu đãi cá nhân</p>
         <p className="mt-2 text-sm leading-relaxed text-white/85">
           Tab Offers lấy gợi ý theo tag CRM (gia đình / anniversary). Ở đây chỉ nhắc minibar quà tặng nếu có trên hồ sơ.
@@ -158,9 +186,17 @@ export default function GuestAppMe() {
         >
           Cảm ơn, tôi đã nhận quà
         </button>
+        </div>
       </section>
 
-      <section className="rounded-3xl border border-white/10 bg-white/[0.04] p-4">
+      <section className="ga-stagger-item relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04]">
+        <img
+          src={guestAppImages.spotifyMood}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover opacity-25"
+        />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0f1714]/95 to-[#0f1714]/70" />
+        <div className="relative p-4">
         <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-white/50">Music (Spotify)</p>
         <p className="mt-1 text-sm text-white/70">Liên kết Spotify để phát playlist khi vào phòng.</p>
         <button
@@ -174,9 +210,10 @@ export default function GuestAppMe() {
         >
           {spotifyLinked ? "Đã liên kết — mở Spotify" : "Liên kết Spotify"}
         </button>
+        </div>
       </section>
 
-      <section className="rounded-3xl border border-white/10 bg-white/[0.04] p-4">
+      <section className="ga-stagger-item rounded-3xl border border-white/10 bg-white/[0.04] p-4">
         <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-white/50">Cảnh đèn</p>
         <p className="mt-1 text-xs text-white/55">Đọc sách · Thư giãn · Lãng mạn (lưu trên thiết bị này).</p>
         <div className="mt-3 flex flex-wrap gap-2">
@@ -188,13 +225,25 @@ export default function GuestAppMe() {
                 setScene(s.id);
                 notify(`Đèn: ${s.label}`);
               }}
-              className={`rounded-2xl border px-4 py-2 text-sm font-semibold transition ${
+              className={`guest-app-card-hover flex min-w-[6.5rem] flex-col overflow-hidden rounded-2xl border text-left transition ${
                 scene === s.id
-                  ? "border-emerald-400/60 bg-emerald-500/20 text-emerald-100"
-                  : "border-white/15 bg-white/5 text-white/80 hover:bg-white/10"
+                  ? "border-emerald-400/60 ring-1 ring-emerald-400/30"
+                  : "border-white/15 hover:border-white/25"
               }`}
             >
-              {s.label}
+              {s.imageUrl ? (
+                <span className="relative block h-14 w-full overflow-hidden">
+                  <img src={s.imageUrl} alt="" className="h-full w-full object-cover opacity-90" />
+                  <span className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                </span>
+              ) : null}
+              <span
+                className={`px-3 py-2 text-sm font-semibold ${
+                  scene === s.id ? "bg-emerald-500/20 text-emerald-100" : "bg-white/5 text-white/85"
+                }`}
+              >
+                {s.label}
+              </span>
             </button>
           ))}
         </div>

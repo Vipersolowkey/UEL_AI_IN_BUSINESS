@@ -11,7 +11,7 @@ export default function GuestToast({ message, onClose }) {
 
   return (
     <div
-      className="fixed left-1/2 top-[4.5rem] z-[60] max-w-[min(20rem,calc(100%-2rem))] -translate-x-1/2 rounded-2xl border border-emerald-400/30 bg-emerald-950/95 px-4 py-3 text-center text-sm font-medium text-emerald-50 shadow-lg backdrop-blur-md"
+      className="guest-app-toast-enter fixed left-1/2 top-[4.5rem] z-[60] max-w-[min(20rem,calc(100%-2rem))] -translate-x-1/2 rounded-2xl border border-emerald-400/30 bg-emerald-950/95 px-4 py-3 text-center text-sm font-medium text-emerald-50 shadow-lg backdrop-blur-md"
       role="status"
     >
       {message}

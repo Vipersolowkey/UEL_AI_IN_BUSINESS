@@ -1,5 +1,6 @@
 import { NavLink, Outlet, Link } from "react-router-dom";
 
+import "../../styles/guestApp.css";
 import GuestToast from "../../pages/guestapp/GuestToast";
 import { GuestAppBookingProvider, useGuestAppBooking } from "./GuestAppBookingContext";
 
@@ -46,7 +47,8 @@ function GuestAppLayoutShell() {
   const { bookingRef, setBookingRef, sessionError, sessionLoading, toast, hideToast } = useGuestAppBooking();
 
   return (
-    <div className="guest-app-root flex min-h-screen flex-col bg-[linear-gradient(180deg,#102219_0%,#0d1a14_45%,#0f1714_100%)] text-[rgba(245,250,248,0.94)]">
+    <div className="guest-app-root relative flex min-h-screen flex-col overflow-x-hidden bg-[linear-gradient(180deg,#102219_0%,#0d1a14_45%,#0f1714_100%)] text-[rgba(245,250,248,0.94)]">
+      <div className="guest-app-aurora" aria-hidden />
       <GuestToast message={toast} onClose={hideToast} />
 
       <header className="sticky top-0 z-20 border-b border-white/10 bg-[rgba(12,28,22,0.92)] px-4 py-3 backdrop-blur-md">
@@ -95,7 +97,7 @@ function GuestAppLayoutShell() {
               end={tab.end}
               className={({ isActive }) =>
                 `flex min-w-0 flex-1 flex-col items-center gap-1 rounded-2xl py-2 text-[0.6rem] font-semibold uppercase tracking-wide transition sm:text-[0.65rem] ${
-                  isActive ? "text-emerald-300" : "text-white/45 hover:text-white/70"
+                  isActive ? "text-emerald-300 guest-app-nav-item-active" : "text-white/45 hover:text-white/70"
                 }`
               }
             >

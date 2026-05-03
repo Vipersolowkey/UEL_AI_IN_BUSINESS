@@ -3,19 +3,23 @@ import { useCallback, useEffect, useState } from "react";
 import { useGuestAppBooking } from "../../components/guestapp/GuestAppBookingContext";
 import { guestAppOffers } from "../../lib/guestAppApi";
 import { upsellFeed } from "../../lib/guestAppMockData";
+import { guestAppImages, segmentOfferImages } from "../../lib/guestAppImages";
 import { fetchCurrentWeather, isRainyWmoCode } from "../../lib/openMeteoWeather";
 
-function UpgradeVisual() {
+function UpgradeVisual({ imageUrl, priceHint }) {
+  const src = imageUrl || guestAppImages.seaUpgrade;
+  const badge = priceHint || "+50k";
   return (
     <div
-      className="relative h-36 w-full overflow-hidden rounded-2xl bg-gradient-to-br from-orange-400/40 via-rose-500/30 to-indigo-900/60"
+      className="guest-app-img-zoom relative h-36 w-full overflow-hidden rounded-2xl"
       role="img"
-      aria-label="Illustration: sea-view balcony at sunset"
+      aria-label="Sea-view balcony"
     >
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,rgba(255,220,180,0.5),transparent_55%)]" />
-      <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between text-xs font-semibold text-white/90">
+      <img src={src} alt="" className="h-full w-full object-cover" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
+      <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between text-xs font-semibold text-white/95">
         <span>Sea view</span>
-        <span className="rounded-full bg-black/30 px-2 py-0.5 backdrop-blur">+50k</span>
+        <span className="rounded-full bg-black/40 px-2 py-0.5 backdrop-blur">{badge}</span>
       </div>
     </div>
   );
@@ -75,7 +79,7 @@ export default function GuestAppOffers() {
   });
 
   return (
-    <div className="space-y-4">
+    <div className="ga-stagger space-y-4">
       {tags.length ? (
         <p className="text-xs text-emerald-200/80">
           Tag CRM: <span className="font-semibold text-white">{tags.join(", ")}</span>
@@ -88,11 +92,18 @@ export default function GuestAppOffers() {
       {segmentOffers.length ? (
         <div className="space-y-3">
           <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-emerald-200/75">Theo segment / tag</p>
-          {segmentOffers.map((item) => (
+          {segmentOffers.map((item) => {
+            const coverSrc = segmentOfferImages[item.id] || segmentOfferImages["seg-default"];
+            return (
             <article
               key={item.id}
-              className="overflow-hidden rounded-3xl border border-emerald-400/25 bg-emerald-950/35 p-4 shadow-[0_12px_40px_rgba(0,0,0,0.25)]"
+              className="ga-stagger-item guest-app-card-hover overflow-hidden rounded-3xl border border-emerald-400/25 bg-emerald-950/35 shadow-[0_12px_40px_rgba(0,0,0,0.25)]"
             >
+              <div className="relative h-28 w-full">
+                <img src={coverSrc} alt="" className="h-full w-full object-cover opacity-95" />
+                <div className="absolute inset-0 bg-gradient-to-t from-emerald-950/95 via-emerald-950/40 to-transparent" />
+              </div>
+              <div className="p-4">
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <h2 className="text-base font-semibold text-white">{item.title}</h2>
                 {item.price_hint ? (
@@ -110,8 +121,10 @@ export default function GuestAppOffers() {
               >
                 {item.cta}
               </button>
+              </div>
             </article>
-          ))}
+            );
+          })}
         </div>
       ) : null}
 
@@ -123,11 +136,16 @@ export default function GuestAppOffers() {
         {visible.map((item) => (
           <article
             key={item.id}
-            className="overflow-hidden rounded-3xl border border-white/10 bg-white/[0.05] shadow-[0_12px_40px_rgba(0,0,0,0.25)]"
+            className="ga-stagger-item guest-app-card-hover overflow-hidden rounded-3xl border border-white/10 bg-white/[0.05] shadow-[0_12px_40px_rgba(0,0,0,0.25)]"
           >
             {item.type === "room_upgrade" ? (
               <div className="p-1">
-                <UpgradeVisual />
+                <UpgradeVisual imageUrl={item.imageUrl} priceHint={item.priceHint} />
+              </div>
+            ) : item.imageUrl ? (
+              <div className="guest-app-img-zoom relative h-28 w-full overflow-hidden">
+                <img src={item.imageUrl} alt="" className="h-full w-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0f1714]/92 to-transparent" />
               </div>
             ) : null}
             <div className="p-4">
@@ -152,7 +170,12 @@ export default function GuestAppOffers() {
         ))}
       </div>
 
-      <section className="rounded-3xl border border-white/10 bg-white/[0.04] p-4">
+      <section className="ga-stagger-item overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04]">
+        <div className="relative h-24 w-full">
+          <img src={guestAppImages.roomAddons} alt="" className="h-full w-full object-cover opacity-80" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0f1714]/95 to-[#0f1714]/40" />
+        </div>
+        <div className="p-4">
         <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-white/50">Add-on phòng</p>
         <p className="mt-1 text-sm text-white/75">Gối lông vũ, tinh dầu, sáng sớm — một chạm.</p>
         <div className="mt-3 flex flex-wrap gap-2">
@@ -166,6 +189,7 @@ export default function GuestAppOffers() {
               + {label}
             </button>
           ))}
+        </div>
         </div>
       </section>
     </div>

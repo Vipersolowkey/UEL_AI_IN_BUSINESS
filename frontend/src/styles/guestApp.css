@@ -1,0 +1,185 @@
+/* Guest app — motion & atmosphere (scoped under .guest-app-root) */
+
+@keyframes ga-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ga-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes ga-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes ga-aurora {
+  0% {
+    opacity: 0.55;
+    transform: scale(1) translate(0, 0);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.05) translate(2%, 1%);
+  }
+  100% {
+    opacity: 0.6;
+    transform: scale(1) translate(-1%, 0);
+  }
+}
+
+@keyframes ga-float-soft {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes ga-pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.35);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(52, 211, 153, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0);
+  }
+}
+
+@keyframes ga-toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
+
+.guest-app-root .ga-animate-in {
+  animation: ga-fade-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.guest-app-root .ga-animate-in-slow {
+  animation: ga-fade-in 0.8s ease both;
+}
+
+.guest-app-root .ga-stagger > .ga-stagger-item:nth-child(1) {
+  animation-delay: 0ms;
+}
+.guest-app-root .ga-stagger > .ga-stagger-item:nth-child(2) {
+  animation-delay: 70ms;
+}
+.guest-app-root .ga-stagger > .ga-stagger-item:nth-child(3) {
+  animation-delay: 140ms;
+}
+.guest-app-root .ga-stagger > .ga-stagger-item:nth-child(4) {
+  animation-delay: 210ms;
+}
+.guest-app-root .ga-stagger > .ga-stagger-item:nth-child(5) {
+  animation-delay: 280ms;
+}
+.guest-app-root .ga-stagger > .ga-stagger-item:nth-child(6) {
+  animation-delay: 350ms;
+}
+.guest-app-root .ga-stagger > .ga-stagger-item:nth-child(7) {
+  animation-delay: 420ms;
+}
+.guest-app-root .ga-stagger > .ga-stagger-item:nth-child(8) {
+  animation-delay: 490ms;
+}
+
+.guest-app-root .ga-stagger-item {
+  animation: ga-fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.guest-app-aurora {
+  position: absolute;
+  inset: -15% -20% auto;
+  height: min(42vh, 320px);
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 70% 55% at 50% 0%, rgba(52, 211, 153, 0.18), transparent 65%),
+    radial-gradient(ellipse 50% 40% at 90% 30%, rgba(251, 191, 36, 0.1), transparent 55%),
+    radial-gradient(ellipse 45% 35% at 10% 40%, rgba(167, 243, 208, 0.08), transparent 50%);
+  animation: ga-aurora 14s ease-in-out infinite alternate;
+}
+
+.guest-app-root main {
+  position: relative;
+  z-index: 1;
+}
+
+.guest-app-root header {
+  position: relative;
+  z-index: 2;
+}
+
+.guest-app-card-hover {
+  transition:
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.35s ease,
+    border-color 0.25s ease;
+}
+
+.guest-app-card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+}
+
+.guest-app-card-hover:active {
+  transform: translateY(0) scale(0.99);
+}
+
+.guest-app-img-zoom {
+  overflow: hidden;
+}
+
+.guest-app-img-zoom img {
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.guest-app-img-zoom:hover img {
+  transform: scale(1.06);
+}
+
+.guest-app-shimmer-border {
+  position: relative;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(52, 211, 153, 0.06));
+  background-size: 200% 200%;
+  animation: ga-shimmer 4s linear infinite;
+}
+
+.guest-app-nav-item-active {
+  animation: ga-pulse-ring 2.5s ease-out infinite;
+}
+
+.guest-app-toast-enter {
+  animation: ga-toast-in 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.guest-app-timeline-current .ga-timeline-dot {
+  animation: ga-float-soft 2.2s ease-in-out infinite;
+}

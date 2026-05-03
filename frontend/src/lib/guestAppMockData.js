@@ -1,5 +1,7 @@
 /** Static fixtures: offers feed, in-room menu, lighting presets (guest app + owner pulse). */
 
+import { guestAppImages } from "./guestAppImages";
+
 export const guestProfile = {
   name: "Alex Nguyen",
   room: "NT-D-2135",
@@ -19,6 +21,7 @@ export const upsellFeed = [
     body: "Want a smoother arrival? Pre-book airport pickup and we will meet you at the terminal.",
     cta: "Book airport transfer",
     priceHint: "From 350,000 VND",
+    imageUrl: guestAppImages.airport,
   },
   {
     id: "upgrade-sea",
@@ -28,6 +31,7 @@ export const upsellFeed = [
     cta: "Upgrade now",
     priceHint: "+50,000 VND",
     imageAlt: "Balcony sea view at sunset",
+    imageUrl: guestAppImages.seaUpgrade,
   },
   {
     id: "spa-prebook",
@@ -36,6 +40,7 @@ export const upsellFeed = [
     body: "Spa slots fill fast at peak hours (5–7 PM). Book ahead and save 15%.",
     cta: "Book spa",
     priceHint: "−15%",
+    imageUrl: guestAppImages.spa,
   },
   {
     id: "addons",
@@ -44,6 +49,7 @@ export const upsellFeed = [
     body: "Down pillows, relaxing essential oils, or an early breakfast if you have an early flight.",
     cta: "Choose add-ons",
     priceHint: "From 80,000 VND",
+    imageUrl: guestAppImages.roomAddons,
   },
   {
     id: "weather-rain",
@@ -52,6 +58,7 @@ export const upsellFeed = [
     body: "Enjoy afternoon tea in the lounge or order in-room dining with our rainy-day menu.",
     cta: "View rainy-day menu",
     conditional: true,
+    imageUrl: guestAppImages.weatherRain,
   },
   {
     id: "happy-hour",
@@ -60,6 +67,7 @@ export const upsellFeed = [
     body: "Happy Hour at the Rooftop Bar starts in one hour — buy one cocktail, get one free.",
     cta: "Reserve bar seats",
     priceHint: "4:00–6:00 PM",
+    imageUrl: guestAppImages.happyHour,
   },
 ];
 
@@ -163,9 +171,24 @@ export const dineMenu = [
 ];
 
 export const lightingScenes = [
-  { id: "reading", label: "Reading", hint: "Warm white light, focused for reading." },
-  { id: "relax", label: "Relax", hint: "Dim warm light, soft ambience." },
-  { id: "romantic", label: "Romantic", hint: "Amber glow, candle-style mood." },
+  {
+    id: "reading",
+    label: "Reading",
+    hint: "Warm white light, focused for reading.",
+    imageUrl: guestAppImages.lightReading,
+  },
+  {
+    id: "relax",
+    label: "Relax",
+    hint: "Dim warm light, soft ambience.",
+    imageUrl: guestAppImages.lightRelax,
+  },
+  {
+    id: "romantic",
+    label: "Romantic",
+    hint: "Amber glow, candle-style mood.",
+    imageUrl: guestAppImages.lightRomantic,
+  },
 ];
 
 export const ownerPulseRows = [

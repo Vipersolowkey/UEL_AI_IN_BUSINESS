@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { useGuestAppBooking } from "../../components/guestapp/GuestAppBookingContext";
 import { guestAppTimelineStep } from "../../lib/guestAppApi";
+import { guestAppImages } from "../../lib/guestAppImages";
 import { fetchCurrentWeather, isRainyWmoCode } from "../../lib/openMeteoWeather";
 
 function formatShortDate(iso) {
@@ -85,8 +86,15 @@ export default function GuestAppHome() {
   const isRain = weather && (isRainyWmoCode(weather.weatherCode) || (weather.precipitationMm ?? 0) > 0.5);
 
   return (
-    <div className="space-y-5">
-      <section className="rounded-3xl border border-white/10 bg-white/[0.04] p-4 shadow-inner">
+    <div className="ga-stagger space-y-5">
+      <section className="ga-stagger-item ga-animate-in relative overflow-hidden rounded-3xl border border-white/10 shadow-inner">
+        <img
+          src={guestAppImages.heroLobby}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover opacity-45"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0f1714] via-[#0f1714]/75 to-[#0f1714]/40" />
+        <div className="relative p-4">
         <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-emerald-200/75">Lưu trú</p>
         <p className="mt-1 text-lg font-semibold text-white">Phòng {roomLabel}</p>
         <p className="mt-0.5 text-sm text-white/60">
@@ -107,8 +115,14 @@ export default function GuestAppHome() {
                     ? "bg-amber-400 ring-2 ring-amber-400/40"
                     : "bg-white/25";
               return (
-                <li key={s.key} className="relative pb-4 pl-1 last:pb-0">
-                  <span className={`absolute -left-[1.15rem] top-1.5 h-2.5 w-2.5 rounded-full ${dot}`} aria-hidden />
+                <li
+                  key={s.key}
+                  className={`relative pb-4 pl-1 last:pb-0 ${s.state === "current" ? "guest-app-timeline-current" : ""}`}
+                >
+                  <span
+                    className={`ga-timeline-dot absolute -left-[1.15rem] top-1.5 h-2.5 w-2.5 rounded-full ${dot}`}
+                    aria-hidden
+                  />
                   <p className="text-sm font-semibold text-white">{s.label_vi}</p>
                   <p className="text-[0.65rem] text-white/40">{s.label_en}</p>
                 </li>
@@ -135,9 +149,15 @@ export default function GuestAppHome() {
             </button>
           </div>
         ) : null}
+        </div>
       </section>
 
-      <section className="rounded-3xl border border-emerald-400/25 bg-gradient-to-br from-emerald-900/40 to-stone-900/40 p-4">
+      <section className="ga-stagger-item guest-app-card-hover overflow-hidden rounded-3xl border border-emerald-400/25 bg-emerald-950/40 shadow-[0_12px_40px_rgba(0,0,0,0.2)]">
+        <div className="relative h-28 w-full shrink-0">
+          <img src={guestAppImages.airport} alt="" className="h-full w-full object-cover opacity-90" />
+          <div className="absolute inset-0 bg-gradient-to-t from-emerald-950/95 via-emerald-950/50 to-transparent" />
+        </div>
+        <div className="p-4">
         <p className="text-sm font-semibold text-white">Cảm ơn bạn đã đặt phòng!</p>
         <p className="mt-2 text-sm leading-relaxed text-white/75">
           Đặt trước đưa đón sân bay — đội concierge sẽ đón bạn tại ga.
@@ -149,12 +169,13 @@ export default function GuestAppHome() {
         >
           Đặt đưa đón
         </button>
+        </div>
       </section>
 
-      <section className="grid gap-3 sm:grid-cols-2">
+      <section className="ga-stagger-item grid gap-3 sm:grid-cols-2">
         <button
           type="button"
-          className={`rounded-3xl border p-4 text-left transition ${
+          className={`guest-app-card-hover relative overflow-hidden rounded-3xl border p-4 text-left transition ${
             doorOpen
               ? "border-emerald-400/50 bg-emerald-500/15"
               : "border-white/10 bg-white/[0.04] hover:border-white/20"
@@ -164,11 +185,26 @@ export default function GuestAppHome() {
             notify("Đã gửi lệnh mở cửa tới khóa phòng (khi tích hợp hoàn tất).");
           }}
         >
+          <img
+            src={guestAppImages.mobileKey}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover opacity-25"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#0f1714]/80 to-transparent" />
+          <div className="relative">
           <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-white/50">Mobile key</p>
           <p className="mt-1 text-base font-semibold text-white">{doorOpen ? "Đã mở" : "Chạm để mở cửa"}</p>
           <p className="mt-1 text-xs text-white/55">Phòng {roomLabel}</p>
+          </div>
         </button>
-        <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-4">
+        <div className="guest-app-card-hover relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] p-4">
+          <img
+            src={guestAppImages.minibarPay}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover opacity-20"
+          />
+          <div className="absolute inset-0 bg-gradient-to-tl from-[#0f1714]/90 to-transparent" />
+          <div className="relative">
           <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-white/50">Thanh toán</p>
           <p className="mt-1 text-base font-semibold text-white">Minibar & dịch vụ</p>
           <p className="mt-1 text-xs text-white/55">
@@ -176,10 +212,14 @@ export default function GuestAppHome() {
             {session?.housekeeping_room_status || "—"}
           </p>
           <p className="mt-2 text-[0.65rem] text-white/45">Chi tiết dòng folio ở tab Me.</p>
+          </div>
         </div>
       </section>
 
-      <section className="rounded-3xl border border-amber-400/20 bg-amber-950/30 p-4">
+      <section className="ga-stagger-item relative overflow-hidden rounded-3xl border border-amber-400/20 bg-amber-950/30">
+        <img src={guestAppImages.happyHour} alt="" className="absolute inset-0 h-full w-full object-cover opacity-35" />
+        <div className="absolute inset-0 bg-gradient-to-r from-amber-950/95 via-amber-950/80 to-amber-950/50" />
+        <div className="relative p-4">
         <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-amber-200/80">Happy hour</p>
         <p className="mt-1 text-sm font-medium text-white">
           Rooftop — mua một cocktail tặng một; bắt đầu sau một giờ nữa.
@@ -191,9 +231,17 @@ export default function GuestAppHome() {
         >
           Giữ chỗ bar
         </button>
+        </div>
       </section>
 
-      <section className="rounded-3xl border border-white/10 bg-white/[0.03] p-4">
+      <section className="ga-stagger-item relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03]">
+        <img
+          src={isRain ? guestAppImages.weatherRain : guestAppImages.weatherSun}
+          alt=""
+          className="absolute right-0 top-0 h-36 w-36 -translate-y-2 translate-x-4 rounded-full object-cover opacity-40 blur-[1px] sm:h-44 sm:w-44"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0f1714] via-[#0f1714]/92 to-transparent sm:via-[#0f1714]/85" />
+        <div className="relative p-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-white/50">Thời tiết</p>
@@ -233,6 +281,7 @@ export default function GuestAppHome() {
             </button>
           </p>
         ) : null}
+        </div>
       </section>
     </div>
   );

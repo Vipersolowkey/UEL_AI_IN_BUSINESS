@@ -4,6 +4,7 @@ import { useGuestAppBooking } from "../../components/guestapp/GuestAppBookingCon
 import { buildDiningAiSuggestion, pickAnchorDishId } from "../../lib/diningAiSuggestions";
 import { guestAppAddFolioLine, guestAppDiningRequest, guestAppOffers } from "../../lib/guestAppApi";
 import { fetchCurrentWeather } from "../../lib/openMeteoWeather";
+import { guestAppImages } from "../../lib/guestAppImages";
 import { dineMenu } from "../../lib/guestAppMockData";
 
 function formatVnd(n) {
@@ -132,8 +133,17 @@ export default function GuestAppDine() {
   }, [ai.addOn, ai.dishName, bookingRef, notify, refreshSession]);
 
   return (
-    <div className="space-y-4 pb-4">
-      <section className="rounded-3xl border border-white/10 bg-white/[0.05] p-4">
+    <div className="ga-stagger space-y-4 pb-4">
+      <div className="ga-stagger-item ga-animate-in relative h-32 overflow-hidden rounded-3xl border border-emerald-400/20 shadow-[0_12px_32px_rgba(0,0,0,0.2)]">
+        <img src={guestAppImages.dineHeader} alt="" className="h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0f1714] via-[#0f1714]/65 to-transparent" />
+        <div className="absolute bottom-3 left-4 right-4">
+          <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-emerald-200/90">Ẩm thực</p>
+          <p className="text-sm font-semibold text-white">Gọi món về phòng · đặt bàn / pre-order</p>
+        </div>
+      </div>
+
+      <section className="ga-stagger-item rounded-3xl border border-white/10 bg-white/[0.05] p-4">
         <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-emerald-200/80">Đặt bàn / pre-order</p>
         <p className="mt-1 text-xs text-white/55">Chọn giờ, số khách, ghi chú dị ứng — lưu vào hồ sơ khách.</p>
         <div className="mt-3 space-y-3">
@@ -188,7 +198,7 @@ export default function GuestAppDine() {
         </div>
       </section>
 
-      <div className="rounded-3xl border border-emerald-400/25 bg-emerald-950/40 p-4">
+      <div className="ga-stagger-item rounded-3xl border border-emerald-400/25 bg-emerald-950/40 p-4">
         <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-emerald-200/80">Gợi ý AI</p>
         <p className="mt-2 text-xs text-white/50">
           Kết hợp tag CRM, thời tiết thực, giờ địa phương và folio gần đây để chọn món kèm phù hợp.
@@ -262,7 +272,10 @@ export default function GuestAppDine() {
 
       <div className="space-y-4">
         {dineMenu.map((dish) => (
-          <article key={dish.id} className="overflow-hidden rounded-3xl border border-white/10 bg-white/[0.05]">
+          <article
+            key={dish.id}
+            className="ga-stagger-item guest-app-img-zoom guest-app-card-hover overflow-hidden rounded-3xl border border-white/10 bg-white/[0.05]"
+          >
             <MenuImage dish={dish} />
             <div className="p-4">
               <div className="flex items-start justify-between gap-3">
