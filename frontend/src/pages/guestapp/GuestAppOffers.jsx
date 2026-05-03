@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
+import GuestAppImg from "../../components/guestapp/GuestAppImg";
 import { useGuestAppBooking } from "../../components/guestapp/GuestAppBookingContext";
 import { guestAppOffers } from "../../lib/guestAppApi";
 import { upsellFeed } from "../../lib/guestAppMockData";
@@ -15,7 +16,7 @@ function UpgradeVisual({ imageUrl, priceHint }) {
       role="img"
       aria-label="Sea-view balcony"
     >
-      <img src={src} alt="" className="h-full w-full object-cover" />
+      <GuestAppImg src={src} alt="" className="h-full w-full object-cover" />
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
       <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between text-xs font-semibold text-white/95">
         <span>Sea view</span>
@@ -100,7 +101,7 @@ export default function GuestAppOffers() {
               className="ga-stagger-item guest-app-card-hover overflow-hidden rounded-3xl border border-emerald-400/25 bg-emerald-950/35 shadow-[0_12px_40px_rgba(0,0,0,0.25)]"
             >
               <div className="relative h-28 w-full">
-                <img src={coverSrc} alt="" className="h-full w-full object-cover opacity-95" />
+                <GuestAppImg src={coverSrc} alt="" className="h-full w-full object-cover opacity-95" />
                 <div className="absolute inset-0 bg-gradient-to-t from-emerald-950/95 via-emerald-950/40 to-transparent" />
               </div>
               <div className="p-4">
@@ -144,7 +145,7 @@ export default function GuestAppOffers() {
               </div>
             ) : item.imageUrl ? (
               <div className="guest-app-img-zoom relative h-28 w-full overflow-hidden">
-                <img src={item.imageUrl} alt="" className="h-full w-full object-cover" />
+                <GuestAppImg src={item.imageUrl} alt="" className="h-full w-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0f1714]/92 to-transparent" />
               </div>
             ) : null}
@@ -172,7 +173,7 @@ export default function GuestAppOffers() {
 
       <section className="ga-stagger-item overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04]">
         <div className="relative h-24 w-full">
-          <img src={guestAppImages.roomAddons} alt="" className="h-full w-full object-cover opacity-80" />
+          <GuestAppImg src={guestAppImages.roomAddons} alt="" className="h-full w-full object-cover opacity-80" />
           <div className="absolute inset-0 bg-gradient-to-r from-[#0f1714]/95 to-[#0f1714]/40" />
         </div>
         <div className="p-4">

@@ -43,3 +43,6 @@ htmlcov/
 
 # Playwright / scrapers (if added)
 playwright-report/
+
+# Local concierge smoke-test output
+backend/scripts/test_concierge_last_run.txt

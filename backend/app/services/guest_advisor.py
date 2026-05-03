@@ -8,7 +8,7 @@ from decimal import Decimal
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models.pms import RoomType
+from app.models.pms import Booking, RoomType
 from app.schemas.ai import GuestAdvisorRequest
 from app.services.competitor_ai import (
     COMPLAINT_KEYWORDS,
@@ -361,6 +361,30 @@ def _infer_buyer_type(payload: GuestAdvisorRequest) -> str:
 def _load_room_types(db: Session) -> list[RoomType]:
     stmt = select(RoomType).order_by(RoomType.base_price.asc(), RoomType.code.asc())
     return list(db.scalars(stmt).all())
+
+
+def get_room_catalog_for_concierge(db: Session) -> list[dict[str, str]]:
+    """Room-type linesheet for guest-app concierge (seed base prices — not live inventory)."""
+    rows = _load_room_types(db)
+    return [
+        {
+            "code": r.code,
+            "display_name": _friendly_room_name(r),
+            "demo_base_price_per_night": str(r.base_price),
+        }
+        for r in rows
+    ]
+
+
+def describe_booking_room_assignment(booking: Booking) -> dict[str, str]:
+    """Current PMS assignment for the active booking (requires room.room_type loaded)."""
+    room = booking.room
+    rt = room.room_type
+    return {
+        "room_number": room.room_number,
+        "room_type_code": rt.code,
+        "room_type_display": _friendly_room_name(rt),
+    }
 
 
 def _choose_room_offer(

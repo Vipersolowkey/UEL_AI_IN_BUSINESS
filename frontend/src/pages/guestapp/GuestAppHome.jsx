@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
+import GuestAppImg from "../../components/guestapp/GuestAppImg";
 import { useGuestAppBooking } from "../../components/guestapp/GuestAppBookingContext";
 import { guestAppTimelineStep } from "../../lib/guestAppApi";
 import { guestAppImages } from "../../lib/guestAppImages";
@@ -88,7 +89,7 @@ export default function GuestAppHome() {
   return (
     <div className="ga-stagger space-y-5">
       <section className="ga-stagger-item ga-animate-in relative overflow-hidden rounded-3xl border border-white/10 shadow-inner">
-        <img
+        <GuestAppImg
           src={guestAppImages.heroLobby}
           alt=""
           className="absolute inset-0 h-full w-full object-cover opacity-45"
@@ -156,7 +157,7 @@ export default function GuestAppHome() {
 
       <section className="ga-stagger-item guest-app-card-hover overflow-hidden rounded-3xl border border-emerald-400/25 bg-emerald-950/40 shadow-[0_12px_40px_rgba(0,0,0,0.2)]">
         <div className="relative h-28 w-full shrink-0">
-          <img src={guestAppImages.airport} alt="" className="h-full w-full object-cover opacity-90" />
+          <GuestAppImg src={guestAppImages.airport} alt="" className="h-full w-full object-cover opacity-90" />
           <div className="absolute inset-0 bg-gradient-to-t from-emerald-950/95 via-emerald-950/50 to-transparent" />
         </div>
         <div className="p-4">
@@ -187,7 +188,7 @@ export default function GuestAppHome() {
             notify("Unlock request sent to your door lock (demo until hardware is connected).");
           }}
         >
-          <img
+          <GuestAppImg
             src={guestAppImages.mobileKey}
             alt=""
             className="absolute inset-0 h-full w-full object-cover opacity-25"
@@ -200,7 +201,7 @@ export default function GuestAppHome() {
           </div>
         </button>
         <div className="guest-app-card-hover relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] p-4">
-          <img
+          <GuestAppImg
             src={guestAppImages.minibarPay}
             alt=""
             className="absolute inset-0 h-full w-full object-cover opacity-20"
@@ -219,7 +220,7 @@ export default function GuestAppHome() {
       </section>
 
       <section className="ga-stagger-item relative overflow-hidden rounded-3xl border border-amber-400/20 bg-amber-950/30">
-        <img src={guestAppImages.happyHour} alt="" className="absolute inset-0 h-full w-full object-cover opacity-35" />
+        <GuestAppImg src={guestAppImages.happyHour} alt="" className="absolute inset-0 h-full w-full object-cover opacity-35" />
         <div className="absolute inset-0 bg-gradient-to-r from-amber-950/95 via-amber-950/80 to-amber-950/50" />
         <div className="relative p-4">
         <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-amber-200/80">Happy hour</p>
@@ -237,7 +238,7 @@ export default function GuestAppHome() {
       </section>
 
       <section className="ga-stagger-item relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03]">
-        <img
+        <GuestAppImg
           src={isRain ? guestAppImages.weatherRain : guestAppImages.weatherSun}
           alt=""
           className="absolute right-0 top-0 h-36 w-36 -translate-y-2 translate-x-4 rounded-full object-cover opacity-40 blur-[1px] sm:h-44 sm:w-44"

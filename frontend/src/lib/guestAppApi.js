@@ -41,6 +41,40 @@ export async function guestAppSession(bookingRef, signal) {
   return data;
 }
 
+/** JSON reply (non-streaming); prefer {@link guestAppConciergeChatStream} in the guest UI. */
+export async function guestAppConciergeChat({ booking_ref, message, history }, signal) {
+  const response = await fetch(`${API_BASE_URL}/guest-app/concierge-chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      booking_ref: booking_ref.trim(),
+      message,
+      history: (history || []).map((m) => ({ role: m.role, content: m.content })),
+    }),
+    ...(signal ? { signal } : {}),
+  });
+  const data = await parseJson(response);
+  if (!response.ok) {
+    const detail = data?.detail || response.statusText;
+    throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+  }
+  return data;
+}
+
+/** POST opens an SSE stream: events `meta`, `model`, `chunk`, optional `error`, then `done`. */
+export async function guestAppConciergeChatStream({ booking_ref, message, history }, signal) {
+  return fetch(`${API_BASE_URL}/guest-app/concierge-chat/stream`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      booking_ref: booking_ref.trim(),
+      message,
+      history: (history || []).map((m) => ({ role: m.role, content: m.content })),
+    }),
+    ...(signal ? { signal } : {}),
+  });
+}
+
 export async function guestAppOffers(bookingRef, signal) {
   const q = new URLSearchParams({ booking_ref: bookingRef.trim() });
   const response = await fetch(`${API_BASE_URL}/guest-app/offers?${q}`, { signal });

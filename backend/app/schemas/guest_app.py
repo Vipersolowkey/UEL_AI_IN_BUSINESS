@@ -6,6 +6,22 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 
+class ConciergeChatMessage(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str = Field(..., max_length=4000)
+
+
+class ConciergeChatRequest(BaseModel):
+    booking_ref: str = Field(..., min_length=3, max_length=120)
+    message: str = Field(..., min_length=1, max_length=2000)
+    history: list[ConciergeChatMessage] = Field(default_factory=list, max_length=24)
+
+
+class ConciergeChatResponse(BaseModel):
+    reply: str
+    model_used: str
+
+
 class DiningRequestCreate(BaseModel):
     booking_ref: str = Field(..., min_length=4, max_length=120)
     party_size: int = Field(2, ge=1, le=30)

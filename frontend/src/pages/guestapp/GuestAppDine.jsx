@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import GuestAppImg from "../../components/guestapp/GuestAppImg";
 import { useGuestAppBooking } from "../../components/guestapp/GuestAppBookingContext";
 import { buildDiningAiSuggestion, pickAnchorDishId } from "../../lib/diningAiSuggestions";
 import { guestAppAddFolioLine, guestAppDiningRequest, guestAppOffers } from "../../lib/guestAppApi";
@@ -12,18 +13,15 @@ function formatVnd(n) {
 }
 
 function MenuImage({ dish }) {
-  const [broken, setBroken] = useState(false);
-  if (!dish.imageUrl || broken) {
+  if (!dish.imageUrl) {
     return <div className={`h-40 w-full bg-gradient-to-br ${dish.imageTone}`} aria-hidden />;
   }
   return (
-    <img
+    <GuestAppImg
       src={dish.imageUrl}
       alt={dish.name}
       className="h-40 w-full object-cover"
-      loading="lazy"
-      decoding="async"
-      onError={() => setBroken(true)}
+      fallbackClassName={`bg-gradient-to-br ${dish.imageTone}`}
     />
   );
 }
@@ -135,7 +133,7 @@ export default function GuestAppDine() {
   return (
     <div className="ga-stagger space-y-4 pb-4">
       <div className="ga-stagger-item ga-animate-in relative h-32 overflow-hidden rounded-3xl border border-emerald-400/20 shadow-[0_12px_32px_rgba(0,0,0,0.2)]">
-        <img src={guestAppImages.dineHeader} alt="" className="h-full w-full object-cover" />
+        <GuestAppImg src={guestAppImages.dineHeader} alt="" className="h-full w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#0f1714] via-[#0f1714]/65 to-transparent" />
         <div className="absolute bottom-3 left-4 right-4">
           <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-emerald-200/90">Dining</p>

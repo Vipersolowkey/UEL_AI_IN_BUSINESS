@@ -1,6 +1,7 @@
 import { NavLink, Outlet, Link } from "react-router-dom";
 
 import "../../styles/guestApp.css";
+import GuestAppConciergeChat from "./GuestAppConciergeChat";
 import GuestToast from "../../pages/guestapp/GuestToast";
 import { GuestAppBookingProvider, useGuestAppBooking } from "./GuestAppBookingContext";
 
@@ -84,6 +85,8 @@ function GuestAppLayoutShell() {
       <main className="mx-auto w-full max-w-md flex-1 px-4 pb-28 pt-4">
         <Outlet />
       </main>
+
+      <GuestAppConciergeChat />
 
       <nav
         className="fixed bottom-0 left-0 right-0 z-20 border-t border-white/10 bg-[rgba(10,22,18,0.96)] px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-lg"

@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 
+import GuestAppImg from "../../components/guestapp/GuestAppImg";
 import { useGuestAppBooking } from "../../components/guestapp/GuestAppBookingContext";
 import { guestAppBillExportUrl, guestAppHousekeepingRequest } from "../../lib/guestAppApi";
 import { guestAppImages } from "../../lib/guestAppImages";
@@ -71,7 +72,7 @@ export default function GuestAppMe() {
   return (
     <div className="ga-stagger space-y-5">
       <section className="ga-stagger-item relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.05]">
-        <img
+        <GuestAppImg
           src={guestAppImages.profileWelcome}
           alt=""
           className="absolute inset-0 h-full w-full object-cover opacity-35"
@@ -96,7 +97,7 @@ export default function GuestAppMe() {
 
       <section className="ga-stagger-item overflow-hidden rounded-3xl border border-emerald-400/20 bg-emerald-950/25">
         <div className="relative h-24 w-full">
-          <img src={guestAppImages.housekeeping} alt="" className="h-full w-full object-cover opacity-85" />
+          <GuestAppImg src={guestAppImages.housekeeping} alt="" className="h-full w-full object-cover opacity-85" />
           <div className="absolute inset-0 bg-gradient-to-r from-emerald-950/95 to-emerald-950/35" />
         </div>
         <div className="p-4">
@@ -126,7 +127,7 @@ export default function GuestAppMe() {
 
       <section className="ga-stagger-item overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04]">
         <div className="relative h-20 w-full">
-          <img src={guestAppImages.folioDesk} alt="" className="h-full w-full object-cover opacity-50" />
+          <GuestAppImg src={guestAppImages.folioDesk} alt="" className="h-full w-full object-cover opacity-50" />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#0f1714]/95" />
         </div>
         <div className="p-4">
@@ -170,7 +171,7 @@ export default function GuestAppMe() {
       </section>
 
       <section className="ga-stagger-item relative overflow-hidden rounded-3xl border border-rose-400/25 bg-gradient-to-br from-rose-950/50 to-stone-950/60">
-        <img
+        <GuestAppImg
           src={guestAppImages.giftRose}
           alt=""
           className="absolute inset-0 h-full w-full object-cover opacity-30"
@@ -192,7 +193,7 @@ export default function GuestAppMe() {
       </section>
 
       <section className="ga-stagger-item relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04]">
-        <img
+        <GuestAppImg
           src={guestAppImages.spotifyMood}
           alt=""
           className="absolute inset-0 h-full w-full object-cover opacity-25"
@@ -235,7 +236,7 @@ export default function GuestAppMe() {
             >
               {s.imageUrl ? (
                 <span className="relative block h-14 w-full overflow-hidden">
-                  <img src={s.imageUrl} alt="" className="h-full w-full object-cover opacity-90" />
+                  <GuestAppImg src={s.imageUrl} alt="" className="h-full w-full object-cover opacity-90" />
                   <span className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
                 </span>
               ) : null}

@@ -3,12 +3,15 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.models.guest_experience import GuestFolioLine, RoomHousekeepingState
 from app.models.property_ops import GuestNote, GuestTimelineEvent
 from app.schemas.guest_app import (
+    ConciergeChatRequest,
+    ConciergeChatResponse,
     DiningRequestCreate,
     FolioLineCreate,
     HousekeepingRequestCreate,
@@ -46,6 +49,31 @@ def guest_app_timeline_step(payload: TimelineStepCreate, db: Session = Depends(g
         return out
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.post("/concierge-chat", response_model=ConciergeChatResponse)
+def guest_app_concierge_chat(payload: ConciergeChatRequest, db: Session = Depends(get_db)) -> ConciergeChatResponse:
+    booking = gs.get_booking_by_ref(db, payload.booking_ref)
+    if booking is None:
+        raise HTTPException(status_code=404, detail="Booking not found.")
+    hist = [m.model_dump() for m in payload.history]
+    out = gs.concierge_chat_turn(db, booking, payload.message, hist)
+    return ConciergeChatResponse(**out)
+
+
+@router.post("/concierge-chat/stream")
+def guest_app_concierge_chat_stream(
+    payload: ConciergeChatRequest,
+    db: Session = Depends(get_db),
+) -> StreamingResponse:
+    booking = gs.get_booking_by_ref(db, payload.booking_ref)
+    if booking is None:
+        raise HTTPException(status_code=404, detail="Booking not found.")
+    hist = [m.model_dump() for m in payload.history]
+    return StreamingResponse(
+        gs.iter_concierge_chat_sse(db, booking, payload.message, hist),
+        media_type="text/event-stream",
+    )
 
 
 @router.get("/offers")

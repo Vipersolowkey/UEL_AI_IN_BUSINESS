@@ -2,6 +2,8 @@
 
 import { guestAppImages } from "./guestAppImages";
 
+const P = (seed, w, h) => `https://picsum.photos/seed/${seed}/${w}/${h}`;
+
 export const guestProfile = {
   name: "Alex Nguyen",
   room: "NT-D-2135",
@@ -77,8 +79,7 @@ export const dineMenu = [
     name: "Wagyu burger & pepper sauce",
     desc: "Mashed potatoes, pickled radish salad.",
     price: 285000,
-    imageUrl:
-      "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=960&q=80",
+    imageUrl: P("ga-dine-burger", 960, 640),
     imageTone: "from-amber-900/80 to-stone-900",
     pairingOptions: [
       {
@@ -109,8 +110,7 @@ export const dineMenu = [
     name: "Pho (late-night)",
     desc: "12-hour broth, fresh rice noodles.",
     price: 165000,
-    imageUrl:
-      "https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?auto=format&fit=crop&w=960&q=80",
+    imageUrl: P("ga-dine-pho", 960, 640),
     imageTone: "from-emerald-900/70 to-stone-900",
     pairingOptions: [
       {
@@ -141,8 +141,7 @@ export const dineMenu = [
     name: "Espresso tiramisu",
     desc: "Mascarpone, dark cocoa, ladyfingers.",
     price: 95000,
-    imageUrl:
-      "https://images.unsplash.com/photo-1571877227200-a00810970b03?auto=format&fit=crop&w=960&q=80",
+    imageUrl: P("ga-dine-dessert", 960, 640),
     imageTone: "from-amber-950/90 to-stone-950",
     pairingOptions: [
       {
