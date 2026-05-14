@@ -1,12 +1,15 @@
-import { NavLink, Outlet, Link } from "react-router-dom";
+import { NavLink, Outlet, Link, useLocation } from "react-router-dom";
+import { useEffect } from "react";
 
 import "../../styles/guestApp.css";
 import GuestAppConciergeChat from "./GuestAppConciergeChat";
 import GuestToast from "../../pages/guestapp/GuestToast";
+import { guestAppLogAnalytics } from "../../lib/guestAppApi";
 import { GuestAppBookingProvider, useGuestAppBooking } from "./GuestAppBookingContext";
 
 const tabs = [
   { to: "/guest-app", label: "Home", end: true, icon: "home" },
+  { to: "/guest-app/explore", label: "Explore", end: false, icon: "explore" },
   { to: "/guest-app/offers", label: "Offers", end: false, icon: "offers" },
   { to: "/guest-app/dine", label: "Dine", end: false, icon: "dine" },
   { to: "/guest-app/me", label: "Me", end: false, icon: "me" },
@@ -18,6 +21,15 @@ function TabIcon({ name }) {
     return (
       <svg className={c} viewBox="0 0 24 24" fill="none" aria-hidden>
         <path d="M4 10.5 12 4l8 6.5V20a1 1 0 01-1 1h-5v-6H10v6H5a1 1 0 01-1-1v-9.5z" strokeWidth="1.6" strokeLinejoin="round" />
+      </svg>
+    );
+  }
+  if (name === "explore") {
+    return (
+      <svg className={c} viewBox="0 0 24 24" fill="none" aria-hidden>
+        <circle cx="12" cy="12" r="9" strokeWidth="1.6" />
+        <path d="M12 3v18M3 12h18" strokeWidth="1.2" strokeLinecap="round" opacity="0.5" />
+        <path d="M12 7v5l3 2" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     );
   }
@@ -46,6 +58,11 @@ function TabIcon({ name }) {
 
 function GuestAppLayoutShell() {
   const { bookingRef, setBookingRef, sessionError, sessionLoading, toast, hideToast } = useGuestAppBooking();
+  const location = useLocation();
+
+  useEffect(() => {
+    guestAppLogAnalytics({ event_key: "screen_view", booking_ref: bookingRef?.trim() || null }).catch(() => {});
+  }, [location.pathname, bookingRef]);
 
   return (
     <div className="guest-app-root relative flex min-h-screen flex-col overflow-x-hidden bg-[linear-gradient(180deg,#102219_0%,#0d1a14_45%,#0f1714_100%)] text-[rgba(245,250,248,0.94)]">
@@ -59,12 +76,20 @@ function GuestAppLayoutShell() {
               <p className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-emerald-200/80">Azure Pearl</p>
               <p className="truncate text-sm font-semibold text-white/95">Your stay</p>
             </div>
-            <Link
-              to="/overview"
-              className="shrink-0 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-semibold text-emerald-100/90 transition hover:bg-white/10"
-            >
-              Ops
-            </Link>
+            <div className="flex shrink-0 items-center gap-2">
+              <Link
+                to="/guest-app/book"
+                className="rounded-full border border-emerald-400/35 bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-100 transition hover:bg-emerald-500/25"
+              >
+                Book
+              </Link>
+              <Link
+                to="/overview"
+                className="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-semibold text-emerald-100/90 transition hover:bg-white/10"
+              >
+                Ops
+              </Link>
+            </div>
           </div>
           <label className="flex flex-col gap-1 text-[0.65rem] font-semibold uppercase tracking-wide text-white/45">
             Booking reference

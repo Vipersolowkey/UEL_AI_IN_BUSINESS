@@ -13,10 +13,12 @@ import {
   fallbackOperationalPriorities,
   fetchCompetitorInsights,
   fetchDashboard,
+  fetchExperienceInsights,
   fetchPricingSimulation,
   fetchProperties,
   fetchRevenueManagerBrief,
   normalizeUiErrorMessage,
+  putPinnedCompetitor,
   pricingSimRoomOptions,
   sourceOptions,
 } from "../lib/dashboardApi";
@@ -122,6 +124,11 @@ function DataGroundingDetails({ title, data }) {
   );
 }
 
+function formatVndOps(n) {
+  if (n == null || Number.isNaN(Number(n))) return "—";
+  return `${new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 0 }).format(Number(n))} ₫`;
+}
+
 export default function OverviewPage() {
   const [selectedCity, setSelectedCity] = useState("Nha Trang");
   const [selectedPropertyId, setSelectedPropertyId] = useState("");
@@ -151,6 +158,17 @@ export default function OverviewPage() {
   const [pricingError, setPricingError] = useState("");
   const [revenueBriefGrounding, setRevenueBriefGrounding] = useState(null);
 
+  const [dashboardNotice, setDashboardNotice] = useState(null);
+  const [experience, setExperience] = useState(null);
+  const [experienceError, setExperienceError] = useState("");
+  const [pinForm, setPinForm] = useState({
+    competitor_name: "",
+    area_name: "Nha Trang",
+    price_hint_vnd: 0,
+    note: "",
+  });
+  const [pinSaving, setPinSaving] = useState(false);
+
   useEffect(() => {
     fetchProperties()
       .then(setProperties)
@@ -174,6 +192,47 @@ export default function OverviewPage() {
       setLoadingRevenueBrief(false);
     }
   }, [selectedCity]);
+
+  const loadExperience = useCallback(async () => {
+    setExperienceError("");
+    try {
+      const data = await fetchExperienceInsights();
+      setExperience(data);
+      const pc = data?.pinned_competitor;
+      if (pc) {
+        setPinForm({
+          competitor_name: pc.competitor_name || "",
+          area_name: pc.area_name || "Nha Trang",
+          price_hint_vnd: Number(pc.price_hint_vnd) || 0,
+          note: pc.note || "",
+        });
+      }
+    } catch (error) {
+      setExperience(null);
+      setExperienceError(normalizeUiErrorMessage(error, "Could not load guest experience insights."));
+    }
+  }, []);
+
+  const savePinnedCompetitor = useCallback(async () => {
+    setPinSaving(true);
+    try {
+      await putPinnedCompetitor({
+        competitor_name: pinForm.competitor_name.trim(),
+        area_name: pinForm.area_name.trim() || "Nha Trang",
+        price_hint_vnd: Number(pinForm.price_hint_vnd) || 0,
+        note: pinForm.note?.trim() || null,
+      });
+      await loadExperience();
+    } catch (error) {
+      setExperienceError(normalizeUiErrorMessage(error, "Could not save pinned competitor."));
+    } finally {
+      setPinSaving(false);
+    }
+  }, [loadExperience, pinForm]);
+
+  useEffect(() => {
+    loadExperience();
+  }, [loadExperience]);
 
   const runPricingSimulation = useCallback(async () => {
     const trimmed = pricingScenario.trim();
@@ -209,6 +268,7 @@ export default function OverviewPage() {
       try {
         const pid = selectedPropertyId === "" ? null : Number(selectedPropertyId);
         const payload = await fetchDashboard(pid);
+        setDashboardNotice(null);
         setMonthlyRevenue(payload.monthlyRevenue);
         setAlerts(payload.alerts);
         setOperationalPriorities(payload.operationalPriorities ?? fallbackOperationalPriorities);
@@ -219,7 +279,11 @@ export default function OverviewPage() {
         if (payload.propertyScope?.areaName) {
           setSelectedCity(payload.propertyScope.areaName);
         }
-      } catch {}
+      } catch {
+        setDashboardNotice(
+          "Could not load the dashboard API (backend down, wrong VITE_API_BASE_URL, or CORS). Operations pulse below is placeholder data, not live PMS."
+        );
+      }
     }
 
     loadDashboardData();
@@ -251,6 +315,42 @@ export default function OverviewPage() {
     <OrganicLayout
       pageKey="overview"
       sideArtwork={OverviewIllustration}
+      sidebarExtra={
+        <>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+            <p className="text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-white/45">Pinned competitor</p>
+            {experience?.pinned_competitor ? (
+              <>
+                <p className="mt-2 text-sm font-semibold leading-snug text-white">{experience.pinned_competitor.competitor_name}</p>
+                <p className="mt-1 text-xs text-white/55">{experience.pinned_competitor.area_name}</p>
+                <p className="mt-2 text-sm font-bold text-emerald-200 tabular-nums">
+                  {formatVndOps(experience.pinned_competitor.price_hint_vnd)}
+                </p>
+                {experience.pinned_competitor.note ? (
+                  <p className="mt-2 line-clamp-4 text-[0.65rem] leading-relaxed text-white/50">{experience.pinned_competitor.note}</p>
+                ) : null}
+              </>
+            ) : (
+              <p className="mt-2 text-xs text-white/50">{experienceError ? "Could not load" : "Loading…"}</p>
+            )}
+          </div>
+          {experience?.nps_week ? (
+            <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+              <p className="text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-white/45">NPS (ISO week)</p>
+              <p className="mt-2 text-2xl font-bold text-white tabular-nums">
+                {experience.nps_week.nps_score != null
+                  ? `${experience.nps_week.nps_score > 0 ? "+" : ""}${experience.nps_week.nps_score}`
+                  : "—"}
+              </p>
+              <p className="mt-1 text-xs text-white/55">
+                {experience.nps_week.response_count} replies
+                {experience.nps_week.avg_stars != null ? ` · avg ${experience.nps_week.avg_stars}★` : ""}
+              </p>
+              <p className="mt-2 text-[0.6rem] text-white/35">{experience.nps_week.week_label}</p>
+            </div>
+          ) : null}
+        </>
+      }
       hero={{
         eyebrow: null,
         title: "Overview",
@@ -288,8 +388,27 @@ export default function OverviewPage() {
       <OrganicSection
         eyebrow={null}
         title="Operations pulse"
-        description={`Snapshot from seeded PMS bookings · ${formatPulseDate(operationalPulse.asOfDate)} · respects property filter above.`}
+        description={`Snapshot from seeded PMS bookings · ${formatPulseDate(operationalPulse.asOfDate)} · respects property filter above. Counts use the server calendar date (UTC on the host) and only confirmed / booked / checked_in stays.`}
       >
+        {dashboardNotice ? (
+          <p className="mb-4 rounded-2xl border border-amber-200/80 bg-amber-50/90 px-4 py-3 text-sm text-amber-950">
+            {dashboardNotice}
+          </p>
+        ) : null}
+        {!dashboardNotice &&
+        operationalPulse.asOfDate &&
+        operationalPulse.totalRooms > 0 &&
+        operationalPulse.occupiedRoomsTonight === 0 &&
+        operationalPulse.arrivalsNext7Days === 0 &&
+        operationalPulse.departuresNext7Days === 0 &&
+        operationalPulse.futureCheckInsNext30Days === 0 ? (
+          <p className="mb-4 rounded-2xl border border-[rgba(61,122,106,0.25)] bg-[rgba(61,122,106,0.08)] px-4 py-3 text-sm text-[var(--earth-secondary)]">
+            The API responded, but every pulse metric is zero for this scope: there may be no active stays in the
+            current windows, or the database was not seeded for &quot;today&quot; on the server. Try{" "}
+            <strong>All properties (combined)</strong>, run{" "}
+            <code className="rounded bg-white/60 px-1">python scripts/seed_db.py</code> on the backend, then refresh.
+          </p>
+        ) : null}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <OrganicStatCard
             label="Tonight occupancy"
@@ -422,6 +541,211 @@ export default function OverviewPage() {
             </article>
           ))}
         </div>
+      </OrganicSection>
+
+      <OrganicSection
+        eyebrow={null}
+        title="Guest app & experience"
+        description="Seeded demo warehouse: NPS for the current ISO week, anonymous inbox (7d), guest app event frequency, fulfilment SLA mock, district heat, local events, folio audit trail, early-stay vs walk-in profit index, and pinned competitor editor."
+        action={
+          <button type="button" className="px-4 py-3 text-sm font-semibold" onClick={() => loadExperience()}>
+            Refresh panel
+          </button>
+        }
+      >
+        {experienceError ? <p className="text-sm font-medium text-[var(--earth-text)]">{experienceError}</p> : null}
+        {!experience && !experienceError ? (
+          <div className="skeleton h-48 rounded-[28px] border border-[rgba(30,42,36,0.08)]" />
+        ) : null}
+        {experience ? (
+          <div className="grid gap-8">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+              <OrganicStatCard
+                label="NPS score (week)"
+                value={
+                  experience.nps_week?.nps_score != null
+                    ? `${experience.nps_week.nps_score > 0 ? "+" : ""}${experience.nps_week.nps_score}`
+                    : "—"
+                }
+                hint={`${experience.nps_week?.response_count ?? 0} replies · ${experience.nps_week?.week_label ?? ""}`}
+              />
+              <OrganicStatCard
+                label="Anonymous feedback (7d)"
+                value={String(experience.anonymous_feedback_count_7d ?? 0)}
+                hint="Inbox only — no guest identity stored."
+              />
+              <OrganicStatCard
+                label="App events (7d)"
+                value={String(experience.app_usage?.events_total ?? 0)}
+                hint={`${experience.app_usage?.screen_views ?? 0} screen_view`}
+              />
+              <OrganicStatCard
+                label="SLA samples (14d)"
+                value={String(experience.service_sla?.samples ?? 0)}
+                hint="Dining / HK / concierge mock fulfilment"
+              />
+            </div>
+
+            <div className="grid gap-8 lg:grid-cols-2">
+              <article className="grid gap-4 rounded-[28px] border border-[rgba(30,42,36,0.1)] bg-[rgba(255,255,255,0.65)] p-5">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--earth-text-subtle)]">App usage by key</h3>
+                <ul className="grid gap-2 text-sm text-[var(--earth-secondary)]">
+                  {Object.entries(experience.app_usage?.top_event_keys || {})
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 10)
+                    .map(([k, v]) => (
+                      <li key={k} className="flex justify-between gap-3 rounded-xl border border-[rgba(30,42,36,0.08)] bg-white/60 px-3 py-2 tabular-nums">
+                        <span className="font-medium">{k}</span>
+                        <span>{v}</span>
+                      </li>
+                    ))}
+                </ul>
+              </article>
+              <article className="grid gap-4 rounded-[28px] border border-[rgba(30,42,36,0.1)] bg-[rgba(255,255,255,0.65)] p-5">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--earth-text-subtle)]">Service response (avg min)</h3>
+                <ul className="grid gap-2 text-sm text-[var(--earth-secondary)]">
+                  {Object.entries(experience.service_sla?.by_service || {}).map(([svc, row]) => (
+                    <li key={svc} className="flex justify-between gap-3 rounded-xl border border-[rgba(30,42,36,0.08)] bg-white/60 px-3 py-2 tabular-nums">
+                      <span className="font-medium">{svc}</span>
+                      <span>
+                        {row?.avg_minutes ?? "—"} ({row?.count ?? 0})
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            </div>
+
+            <div className="grid gap-8 lg:grid-cols-2">
+              <article className="grid gap-4 rounded-[28px] border border-[rgba(30,42,36,0.1)] bg-[rgba(255,255,255,0.65)] p-5">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--earth-text-subtle)]">
+                  ADR heat — {experience.heatmap?.area}
+                </h3>
+                <p className="text-xs text-[var(--earth-text-muted)]">{experience.heatmap?.note}</p>
+                <ul className="mt-2 grid gap-3">
+                  {(experience.heatmap?.zones || []).map((z) => (
+                    <li key={z.zone} className="grid gap-1">
+                      <div className="flex justify-between gap-2 text-sm font-medium text-[var(--earth-secondary)]">
+                        <span className="min-w-0 truncate">{z.zone}</span>
+                        <span className="shrink-0 tabular-nums text-[var(--earth-primary)]">{formatVndOps(z.median_adr_vnd)}</span>
+                      </div>
+                      <div className="h-2 overflow-hidden rounded-full bg-[rgba(30,42,36,0.08)]">
+                        <div
+                          className="h-full rounded-full bg-[rgba(61,122,106,0.55)]"
+                          style={{ width: `${Math.round((z.heat || 0) * 100)}%` }}
+                        />
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </article>
+              <article className="grid gap-4 rounded-[28px] border border-[rgba(30,42,36,0.1)] bg-[rgba(255,255,255,0.65)] p-5">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--earth-text-subtle)]">Local events & demand</h3>
+                <ul className="grid gap-3 text-sm leading-relaxed text-[var(--earth-secondary)]">
+                  {(experience.local_events || []).slice(0, 8).map((ev) => (
+                    <li key={`${ev.title}-${ev.event_date}`} className="rounded-xl border border-[rgba(30,42,36,0.08)] bg-white/60 px-3 py-2">
+                      <p className="font-semibold">{ev.title}</p>
+                      <p className="text-xs text-[var(--earth-text-muted)]">
+                        {ev.event_date}
+                        {ev.ends_on ? ` → ${ev.ends_on}` : ""} · +{ev.expected_lift_pct}% lift (demo)
+                      </p>
+                      <p className="mt-1 text-xs text-[var(--earth-text-muted)]">{ev.demand_note}</p>
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            </div>
+
+            <div className="grid gap-8 lg:grid-cols-2">
+              <article className="overflow-hidden rounded-[28px] border border-[rgba(30,42,36,0.1)] bg-[rgba(255,255,255,0.65)] p-5">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--earth-text-subtle)]">Folio access audit (privacy demo)</h3>
+                <div className="mt-3 max-h-64 overflow-auto">
+                  <table className="w-full text-left text-xs text-[var(--earth-secondary)]">
+                    <thead>
+                      <tr className="border-b border-[rgba(30,42,36,0.12)] text-[var(--earth-text-subtle)]">
+                        <th className="py-2 pr-2 font-semibold">When</th>
+                        <th className="py-2 pr-2 font-semibold">Ref</th>
+                        <th className="py-2 pr-2 font-semibold">Actor</th>
+                        <th className="py-2 font-semibold">Detail</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(experience.recent_audits || []).map((row) => (
+                        <tr key={`${row.created_at}-${row.booking_ref}-${row.actor_label}`} className="border-b border-[rgba(30,42,36,0.06)]">
+                          <td className="py-2 pr-2 align-top tabular-nums text-[0.65rem] text-[var(--earth-text-muted)]">{row.created_at}</td>
+                          <td className="py-2 pr-2 align-top font-mono text-[0.65rem]">{row.booking_ref}</td>
+                          <td className="py-2 pr-2 align-top">{row.actor_label}</td>
+                          <td className="py-2 align-top text-[var(--earth-text-muted)]">{row.detail || row.action}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </article>
+              <article className="grid gap-4 rounded-[28px] border border-[rgba(30,42,36,0.1)] bg-[rgba(255,255,255,0.65)] p-5">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--earth-text-subtle)]">Profit index (mock)</h3>
+                <p className="text-xs text-[var(--earth-text-muted)]">{experience.pricing_scenarios?.disclaimer}</p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {(experience.pricing_scenarios?.scenarios || []).map((s) => (
+                    <div key={s.id} className="rounded-xl border border-[rgba(30,42,36,0.1)] bg-white/70 p-4">
+                      <p className="text-sm font-semibold text-[var(--earth-secondary)]">{s.label}</p>
+                      <p className="mt-2 text-2xl font-bold tabular-nums text-[var(--earth-primary)]">{s.estimated_profit_index}</p>
+                      <p className="mt-2 text-xs leading-relaxed text-[var(--earth-text-muted)]">{s.notes}</p>
+                    </div>
+                  ))}
+                </div>
+              </article>
+            </div>
+
+            <article className="grid gap-4 rounded-[28px] border border-[rgba(30,42,36,0.1)] bg-[rgba(255,255,255,0.65)] p-5">
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--earth-text-subtle)]">Edit pinned competitor (sidebar)</h3>
+              <div className="grid gap-4 md:grid-cols-2">
+                <label className="grid gap-2 text-sm font-semibold text-[var(--earth-secondary)]">
+                  Property name
+                  <input
+                    className="px-4 py-3 text-sm font-semibold"
+                    value={pinForm.competitor_name}
+                    onChange={(e) => setPinForm((c) => ({ ...c, competitor_name: e.target.value }))}
+                  />
+                </label>
+                <label className="grid gap-2 text-sm font-semibold text-[var(--earth-secondary)]">
+                  Area
+                  <input
+                    className="px-4 py-3 text-sm font-semibold"
+                    value={pinForm.area_name}
+                    onChange={(e) => setPinForm((c) => ({ ...c, area_name: e.target.value }))}
+                  />
+                </label>
+                <label className="grid gap-2 text-sm font-semibold text-[var(--earth-secondary)]">
+                  Price hint (VND)
+                  <input
+                    type="number"
+                    min={0}
+                    className="px-4 py-3 text-sm font-semibold tabular-nums"
+                    value={pinForm.price_hint_vnd}
+                    onChange={(e) => setPinForm((c) => ({ ...c, price_hint_vnd: Number(e.target.value) }))}
+                  />
+                </label>
+                <label className="grid gap-2 text-sm font-semibold text-[var(--earth-secondary)] md:col-span-2">
+                  Note
+                  <input
+                    className="px-4 py-3 text-sm font-semibold"
+                    value={pinForm.note || ""}
+                    onChange={(e) => setPinForm((c) => ({ ...c, note: e.target.value }))}
+                  />
+                </label>
+              </div>
+              <button
+                type="button"
+                disabled={pinSaving || !pinForm.competitor_name.trim()}
+                className="justify-self-start px-5 py-3 text-sm font-semibold"
+                onClick={() => savePinnedCompetitor()}
+              >
+                {pinSaving ? "Saving…" : "Save pin"}
+              </button>
+            </article>
+          </div>
+        ) : null}
       </OrganicSection>
 
       <OrganicSection

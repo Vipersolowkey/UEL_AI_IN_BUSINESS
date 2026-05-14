@@ -163,3 +163,128 @@ export async function guestAppAddFolioLine({ booking_ref, category, description,
   }
   return data;
 }
+
+export async function guestAppSubmitNps({ booking_ref, stars, comment }) {
+  const response = await fetch(`${API_BASE_URL}/guest-app/nps`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      booking_ref: booking_ref.trim(),
+      stars,
+      comment: comment?.trim() || null,
+    }),
+  });
+  const data = await parseJson(response);
+  if (!response.ok) {
+    const detail = data?.detail || response.statusText;
+    throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+  }
+  return data;
+}
+
+/** Anonymous — no booking required. */
+export async function guestAppAnonymousFeedback({ message, area_name }) {
+  const response = await fetch(`${API_BASE_URL}/guest-app/feedback-anonymous`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      message: message.trim(),
+      area_name: area_name?.trim() || null,
+    }),
+  });
+  const data = await parseJson(response);
+  if (!response.ok) {
+    const detail = data?.detail || response.statusText;
+    throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+  }
+  return data;
+}
+
+export async function guestAppFirstTimerGuide(bookingRef, signal) {
+  const q = new URLSearchParams({ booking_ref: bookingRef.trim() });
+  const response = await fetch(`${API_BASE_URL}/guest-app/first-timer-guide?${q}`, { signal });
+  const data = await parseJson(response);
+  if (!response.ok) {
+    const detail = data?.detail || response.statusText;
+    throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+  }
+  return data;
+}
+
+export async function guestAppTimeUpsells(signal) {
+  const response = await fetch(`${API_BASE_URL}/guest-app/time-upsells`, { signal });
+  const data = await parseJson(response);
+  if (!response.ok) {
+    const detail = data?.detail || response.statusText;
+    throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+  }
+  return data;
+}
+
+export async function guestAppPricingScenarios(signal) {
+  const response = await fetch(`${API_BASE_URL}/guest-app/pricing-scenarios`, { signal });
+  const data = await parseJson(response);
+  if (!response.ok) {
+    const detail = data?.detail || response.statusText;
+    throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+  }
+  return data;
+}
+
+export async function guestAppVouchers(signal) {
+  const response = await fetch(`${API_BASE_URL}/guest-app/vouchers`, { signal });
+  const data = await parseJson(response);
+  if (!response.ok) {
+    const detail = data?.detail || response.statusText;
+    throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+  }
+  return data;
+}
+
+export async function guestAppRedeemVoucher({ booking_ref, code }) {
+  const response = await fetch(`${API_BASE_URL}/guest-app/voucher/redeem`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ booking_ref: booking_ref.trim(), code: code.trim() }),
+  });
+  const data = await parseJson(response);
+  if (!response.ok) {
+    const detail = data?.detail || response.statusText;
+    throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+  }
+  return data;
+}
+
+export async function guestAppBookingInquiry(payload) {
+  const response = await fetch(`${API_BASE_URL}/guest-app/booking-inquiry`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const data = await parseJson(response);
+  if (!response.ok) {
+    const detail = data?.detail || response.statusText;
+    throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+  }
+  return data;
+}
+
+/** Optional booking_ref — omit or null for anonymous screen analytics. */
+export async function guestAppLogAnalytics({ event_key, booking_ref, duration_ms }) {
+  const body = {
+    event_key,
+    duration_ms: duration_ms ?? null,
+    booking_ref: booking_ref && String(booking_ref).trim().length >= 3 ? String(booking_ref).trim() : null,
+  };
+  const response = await fetch(`${API_BASE_URL}/guest-app/analytics/event`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const data = await parseJson(response);
+  if (!response.ok) {
+    const detail = data?.detail || response.statusText;
+    throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+  }
+  return data;
+}

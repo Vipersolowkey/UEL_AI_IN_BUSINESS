@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.models.guest_experience import GuestFolioLine, RoomHousekeepingState
-from app.models.property_ops import GuestNote, GuestTimelineEvent
+from app.models.property_ops import GuestNote, GuestTimelineEvent, Property
 from app.schemas.guest_app import (
     ConciergeChatRequest,
     ConciergeChatResponse,
@@ -17,7 +17,16 @@ from app.schemas.guest_app import (
     HousekeepingRequestCreate,
     TimelineStepCreate,
 )
+from app.schemas.guest_engagement import (
+    AnonymousFeedbackCreate,
+    AppAnalyticsEventCreate,
+    BookingInquiryCreate,
+    FolioAuditCreate,
+    NpsSubmit,
+    VoucherRedeem,
+)
 from app.services import guest_app_service as gs
+from app.services import guest_engagement_service as ge
 
 router = APIRouter(prefix="/guest-app", tags=["guest-app"])
 
@@ -150,6 +159,7 @@ def guest_app_bill_preview(booking_ref: str = Query(..., min_length=3), db: Sess
     booking = gs.get_booking_by_ref(db, booking_ref)
     if booking is None:
         raise HTTPException(status_code=404, detail="Booking not found.")
+    ge.log_folio_audit(db, booking.booking_id, "Guest self-service", "bill_preview_json")
     return gs.build_session_payload(db, booking)
 
 
@@ -158,6 +168,7 @@ def guest_app_bill_export(booking_ref: str = Query(..., min_length=3), db: Sessi
     booking = gs.get_booking_by_ref(db, booking_ref)
     if booking is None:
         raise HTTPException(status_code=404, detail="Booking not found.")
+    ge.log_folio_audit(db, booking.booking_id, "Guest self-service", "bill_export_txt")
     payload = gs.build_session_payload(db, booking)
     text = gs.bill_export_text(payload)
     return Response(content=text, media_type="text/plain; charset=utf-8")
@@ -178,3 +189,78 @@ def guest_app_folio_line(payload: FolioLineCreate, db: Session = Depends(get_db)
     db.commit()
     db.refresh(line)
     return {"id": line.id, "category": line.category, "description": line.description, "amount": str(line.amount)}
+
+
+@router.post("/nps")
+def guest_app_nps_submit(payload: NpsSubmit, db: Session = Depends(get_db)) -> dict:
+    booking = gs.get_booking_by_ref(db, payload.booking_ref)
+    if booking is None:
+        raise HTTPException(status_code=404, detail="Booking not found.")
+    prop = db.get(Property, booking.room.property_id) if booking.room else None
+    area = prop.area_name if prop else "Nha Trang"
+    return ge.submit_nps(db, payload.booking_ref, payload.stars, payload.comment, area_name=area)
+
+
+@router.post("/feedback-anonymous")
+def guest_app_feedback_anonymous(payload: AnonymousFeedbackCreate, db: Session = Depends(get_db)) -> dict:
+    return ge.submit_anonymous_feedback(db, payload.message, payload.area_name)
+
+
+@router.post("/audit/folio-view")
+def guest_app_audit_folio(payload: FolioAuditCreate, db: Session = Depends(get_db)) -> dict:
+    booking = gs.get_booking_by_ref(db, payload.booking_ref)
+    if booking is None:
+        raise HTTPException(status_code=404, detail="Booking not found.")
+    ge.log_folio_audit(db, payload.booking_ref, payload.actor_label, "manual_folio_view")
+    return {"ok": True}
+
+
+@router.post("/analytics/event")
+def guest_app_analytics_event(payload: AppAnalyticsEventCreate, db: Session = Depends(get_db)) -> dict:
+    if payload.booking_ref:
+        booking = gs.get_booking_by_ref(db, payload.booking_ref)
+        if booking is None:
+            raise HTTPException(status_code=404, detail="Booking not found.")
+    ge.log_app_event(db, payload.event_key, payload.booking_ref, payload.duration_ms)
+    return {"ok": True}
+
+
+@router.get("/first-timer-guide")
+def guest_app_first_timer(booking_ref: str = Query(..., min_length=3), db: Session = Depends(get_db)) -> dict:
+    booking = gs.get_booking_by_ref(db, booking_ref)
+    if booking is None:
+        raise HTTPException(status_code=404, detail="Booking not found.")
+    return ge.first_timer_guide(db, booking)
+
+
+@router.get("/time-upsells")
+def guest_app_time_upsells() -> dict:
+    return ge.time_based_upsells()
+
+
+@router.get("/pricing-scenarios")
+def guest_app_pricing_scenarios() -> dict:
+    return ge.pricing_scenarios_mock()
+
+
+@router.get("/vouchers")
+def guest_app_vouchers(db: Session = Depends(get_db)) -> dict:
+    return {"vouchers": ge.list_vouchers(db)}
+
+
+@router.post("/voucher/redeem")
+def guest_app_voucher_redeem(payload: VoucherRedeem, db: Session = Depends(get_db)) -> dict:
+    booking = gs.get_booking_by_ref(db, payload.booking_ref)
+    if booking is None:
+        raise HTTPException(status_code=404, detail="Booking not found.")
+    out = ge.redeem_voucher(db, payload.code, payload.booking_ref)
+    if not out.get("ok"):
+        raise HTTPException(status_code=400, detail=out.get("message", "Redeem failed."))
+    return out
+
+
+@router.post("/booking-inquiry")
+def guest_app_booking_inquiry(payload: BookingInquiryCreate, db: Session = Depends(get_db)) -> dict:
+    if payload.check_out <= payload.check_in:
+        raise HTTPException(status_code=400, detail="check_out must be after check_in.")
+    return ge.create_inquiry(db, payload.model_dump())

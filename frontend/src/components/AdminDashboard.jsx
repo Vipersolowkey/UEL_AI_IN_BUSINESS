@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { API_BASE_URL, optionalPositiveInt } from "../lib/dashboardApi";
+import { API_BASE_URL, consumeSseStream, normalizeStreamProviderError, optionalPositiveInt } from "../lib/dashboardApi";
 
 const fallbackMonthlyRevenue = {
   monthLabel: "August 2017",
@@ -463,40 +463,6 @@ function parseReviewPayload(review) {
     reviewerName,
     reviewLocation,
   };
-}
-
-async function consumeSseStream(response, onEvent) {
-  if (!response.body) {
-    throw new Error("Streaming body is not available.");
-  }
-
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = "";
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) {
-      break;
-    }
-
-    buffer += decoder.decode(value, { stream: true });
-    const events = buffer.split("\n\n");
-    buffer = events.pop() || "";
-
-    for (const eventBlock of events) {
-      const dataLine = eventBlock
-        .split("\n")
-        .find((line) => line.startsWith("data: "));
-
-      if (!dataLine) {
-        continue;
-      }
-
-      const payload = JSON.parse(dataLine.slice(6));
-      onEvent(payload);
-    }
-  }
 }
 
 function MetricCard({ label, value, hint, accent = "teal" }) {
@@ -1977,6 +1943,26 @@ export default function AdminDashboard({ initialPage = "overview" }) {
             ...current,
             model_used: event.model_used,
           }));
+          return;
+        }
+        if (event.type === "error") {
+          const errorMessage = normalizeStreamProviderError(
+            event,
+            "AI chat unavailable. Check backend logs for details."
+          );
+          setGuestChatMeta((current) => ({
+            ...current,
+            model_used: "provider_error",
+          }));
+          setGuestChatMessages((current) => {
+            const updated = [...current];
+            const lastIndex = updated.length - 1;
+            if (lastIndex >= 0 && updated[lastIndex].role === "assistant") {
+              updated[lastIndex] = { ...updated[lastIndex], content: errorMessage };
+              return updated;
+            }
+            return [...updated, { role: "assistant", content: errorMessage }];
+          });
           return;
         }
         if (event.type === "chunk") {

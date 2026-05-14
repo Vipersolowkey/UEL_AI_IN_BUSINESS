@@ -202,9 +202,15 @@ def guest_chat_stream(
                 system_prompt=prepared["system_prompt"],
             )
             yield _sse({"type": "model", "model_used": model_used})
+            had_chunk = False
             for chunk in iterator:
                 if chunk:
+                    had_chunk = True
                     yield _sse({"type": "chunk", "content": chunk})
+            if not had_chunk:
+                fallback = generate_guest_chat_reply(db=db, payload=advisor_payload, history=history)
+                yield _sse({"type": "model", "model_used": fallback.get("model_used", "heuristic_fallback")})
+                yield _sse({"type": "chunk", "content": fallback.get("reply", "")})
         except Exception as exc:
             logger.exception(
                 "guest_chat_stream runtime stream failure: area=%s source=%s message=%r error=%r",
@@ -213,13 +219,9 @@ def guest_chat_stream(
                 payload.customer_message,
                 exc,
             )
-            yield _sse(
-                {
-                    "type": "error",
-                    "message": "AI provider is unavailable for guest chat.",
-                    "detail": str(exc),
-                }
-            )
+            fallback = generate_guest_chat_reply(db=db, payload=advisor_payload, history=history)
+            yield _sse({"type": "model", "model_used": fallback.get("model_used", "heuristic_fallback")})
+            yield _sse({"type": "chunk", "content": fallback.get("reply", "")})
         yield _sse({"type": "done"})
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")

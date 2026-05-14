@@ -401,7 +401,7 @@ function renderIllustration(illustration, variant = "hero") {
   return illustration;
 }
 
-export function OrganicLayout({ pageKey, hero, children, sideArtwork = true }) {
+export function OrganicLayout({ pageKey, hero, children, sideArtwork = true, sidebarExtra = null }) {
   const navItems = [
     { key: "overview", label: "Overview", path: "/overview" },
     { key: "calendar", label: "Calendar", path: "/calendar" },
@@ -475,6 +475,10 @@ export function OrganicLayout({ pageKey, hero, children, sideArtwork = true }) {
               </NavLink>
             ))}
           </nav>
+
+          {sidebarExtra ? (
+            <div className="mt-4 hidden w-full min-w-0 flex-col gap-3 lg:flex">{sidebarExtra}</div>
+          ) : null}
 
           {sideArtwork ? (
             <div className="mt-5 hidden flex-col items-center gap-3 lg:flex">

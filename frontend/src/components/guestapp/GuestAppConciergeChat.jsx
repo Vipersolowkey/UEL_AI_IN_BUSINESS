@@ -47,8 +47,6 @@ export default function GuestAppConciergeChat() {
     setLoading(true);
     setModelHint("");
 
-    let assistantInserted = false;
-
     try {
       const response = await guestAppConciergeChatStream({
         booking_ref: bookingRef,
@@ -66,8 +64,11 @@ export default function GuestAppConciergeChat() {
         throw new Error(detail);
       }
 
+      setMessages((current) => [...current, { role: "assistant", content: "" }]);
+
       await consumeSseStream(response, (event) => {
         if (event.type === "meta") return;
+        if (event.type === "done") return;
         if (event.type === "model") {
           if (event.model_used) setModelHint(String(event.model_used));
           return;
@@ -81,7 +82,7 @@ export default function GuestAppConciergeChat() {
           setMessages((current) => {
             const updated = [...current];
             const lastIndex = updated.length - 1;
-            if (lastIndex >= 0 && updated[lastIndex].role === "assistant" && !updated[lastIndex].content) {
+            if (lastIndex >= 0 && updated[lastIndex].role === "assistant") {
               updated[lastIndex] = { role: "assistant", content: errorMessage };
               return updated;
             }
@@ -92,19 +93,31 @@ export default function GuestAppConciergeChat() {
         if (event.type === "chunk") {
           setMessages((current) => {
             const updated = [...current];
-            if (!assistantInserted || updated[updated.length - 1]?.role !== "assistant") {
-              assistantInserted = true;
-              updated.push({ role: "assistant", content: event.content || "" });
+            const lastIndex = updated.length - 1;
+            if (lastIndex >= 0 && updated[lastIndex].role === "assistant") {
+              updated[lastIndex] = {
+                ...updated[lastIndex],
+                content: `${updated[lastIndex].content}${event.content || ""}`,
+              };
               return updated;
             }
-            const last = updated.length - 1;
-            updated[last] = {
-              ...updated[last],
-              content: `${updated[last].content}${event.content || ""}`,
-            };
-            return updated;
+            return [...updated, { role: "assistant", content: event.content || "" }];
           });
         }
+      });
+
+      setMessages((current) => {
+        const updated = [...current];
+        const lastIndex = updated.length - 1;
+        if (lastIndex >= 0 && updated[lastIndex].role === "assistant" && !String(updated[lastIndex].content || "").trim()) {
+          updated[lastIndex] = {
+            role: "assistant",
+            content:
+              "Here is a quick offline suggestion: for dining use the Dine tab, for housekeeping use Me, and dial 0 for urgent help. If this message appeared unexpectedly, the AI stream ended without text — try again in a moment.",
+          };
+          return updated;
+        }
+        return current;
       });
     } catch (error) {
       const errorMessage = normalizeUiErrorMessage(

@@ -6,6 +6,8 @@ import CalendarPage from "./pages/CalendarPage";
 import CompetitorsPage from "./pages/CompetitorsPage";
 import InsightsRankingsPage from "./pages/InsightsRankingsPage";
 import GuestAppDine from "./pages/guestapp/GuestAppDine";
+import GuestAppExplore from "./pages/guestapp/GuestAppExplore";
+import GuestAppBook from "./pages/guestapp/GuestAppBook";
 import GuestAppHome from "./pages/guestapp/GuestAppHome";
 import GuestAppMe from "./pages/guestapp/GuestAppMe";
 import GuestAppOffers from "./pages/guestapp/GuestAppOffers";
@@ -33,6 +35,8 @@ export default function App() {
       <Route path="/guest-app" element={<GuestAppLayout />}>
         <Route index element={<GuestAppHome />} />
         <Route path="rooms" element={<Navigate to="/operations/rooms" replace />} />
+        <Route path="explore" element={<GuestAppExplore />} />
+        <Route path="book" element={<GuestAppBook />} />
         <Route path="offers" element={<GuestAppOffers />} />
         <Route path="dine" element={<GuestAppDine />} />
         <Route path="me" element={<GuestAppMe />} />

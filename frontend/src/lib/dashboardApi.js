@@ -2,8 +2,18 @@ export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0
 
 export function getApiOrigin() {
   try {
-    return new URL(API_BASE_URL).origin;
+    const base = String(API_BASE_URL || "").trim();
+    if (base.startsWith("/")) {
+      if (typeof window !== "undefined" && window.location?.origin) {
+        return window.location.origin;
+      }
+      return "";
+    }
+    return new URL(base).origin;
   } catch {
+    if (typeof window !== "undefined" && window.location?.origin) {
+      return window.location.origin;
+    }
     return "http://127.0.0.1:8000";
   }
 }
@@ -18,6 +28,41 @@ export async function fetchBackendHealth() {
   } catch {
     return false;
   }
+}
+
+/** Guest engagement pack: NPS week, app usage, SLA, heatmap, events, audits, pinned competitor. */
+export async function fetchExperienceInsights() {
+  const response = await fetch(`${API_BASE_URL}/dashboard/experience-insights`);
+  let data = null;
+  try {
+    data = await response.json();
+  } catch {
+    data = null;
+  }
+  if (!response.ok) {
+    const detail = data?.detail || response.statusText;
+    throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+  }
+  return data;
+}
+
+export async function putPinnedCompetitor(payload) {
+  const response = await fetch(`${API_BASE_URL}/dashboard/pinned-competitor`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  let data = null;
+  try {
+    data = await response.json();
+  } catch {
+    data = null;
+  }
+  if (!response.ok) {
+    const detail = data?.detail || response.statusText;
+    throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+  }
+  return data;
 }
 
 export const sourceOptions = [
@@ -559,11 +604,8 @@ export async function consumeSseStream(response, onEvent) {
   const decoder = new TextDecoder();
   let buffer = "";
 
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-
-    buffer += decoder.decode(value, { stream: true });
+  const flushEvents = (chunk) => {
+    buffer += chunk;
     const events = buffer.split("\n\n");
     buffer = events.pop() || "";
 
@@ -572,6 +614,19 @@ export async function consumeSseStream(response, onEvent) {
       if (!dataLine) continue;
       onEvent(JSON.parse(dataLine.slice(6)));
     }
+  };
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (value) {
+      flushEvents(decoder.decode(value, { stream: !done }));
+    }
+    if (done) break;
+  }
+
+  flushEvents(decoder.decode());
+  if (buffer.trim()) {
+    flushEvents("\n\n");
   }
 }
 

@@ -22,6 +22,17 @@ from app.models import (  # noqa: F401
     ServiceRatingSummary,
     UpsellUsageSummary,
 )
+from app.models.guest_engagement import (  # noqa: F401
+    AnonymousFeedback,
+    AppUsageEvent,
+    BookingInquiry,
+    GuestAuditLog,
+    LocalMarketEvent,
+    NpsSurvey,
+    PinnedCompetitor,
+    PromoVoucher,
+    ServiceSlaLog,
+)
 from app.models.property_ops import (  # noqa: F401
     AlertThreshold,
     GuestNote,

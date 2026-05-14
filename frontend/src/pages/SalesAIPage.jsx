@@ -124,7 +124,7 @@ export default function SalesAIPage() {
       });
       if (!response.ok) throw new Error("stream failed");
 
-      let assistantInserted = false;
+      setMessages((current) => [...current, { role: "assistant", content: "" }]);
       await consumeSseStream(response, (event) => {
         if (event.type === "meta") {
           setChatMeta((current) => ({ ...current, ...event }));
@@ -137,22 +137,26 @@ export default function SalesAIPage() {
           );
           setChatMeta((current) => ({ ...current, model_used: "provider_error" }));
           setMessages((current) => {
-            const updated = current.filter(
-              (item, index, array) => !(index === array.length - 1 && item.role === "assistant" && !item.content)
-            );
+            const updated = [...current];
+            const lastIndex = updated.length - 1;
+            if (lastIndex >= 0 && updated[lastIndex].role === "assistant") {
+              updated[lastIndex] = { ...updated[lastIndex], content: errorMessage };
+              return updated;
+            }
             return [...updated, { role: "assistant", content: errorMessage }];
           });
         } else if (event.type === "chunk") {
           setMessages((current) => {
             const updated = [...current];
-            if (!assistantInserted || updated[updated.length - 1]?.role !== "assistant") {
-              assistantInserted = true;
-              updated.push({ role: "assistant", content: event.content });
+            const lastIndex = updated.length - 1;
+            if (lastIndex >= 0 && updated[lastIndex].role === "assistant") {
+              updated[lastIndex] = {
+                ...updated[lastIndex],
+                content: `${updated[lastIndex].content}${event.content}`,
+              };
               return updated;
             }
-            const last = updated.length - 1;
-            updated[last] = { ...updated[last], content: `${updated[last].content}${event.content}` };
-            return updated;
+            return [...updated, { role: "assistant", content: event.content }];
           });
         }
       });

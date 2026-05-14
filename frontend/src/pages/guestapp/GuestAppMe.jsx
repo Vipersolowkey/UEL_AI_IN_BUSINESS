@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 
 import GuestAppImg from "../../components/guestapp/GuestAppImg";
 import { useGuestAppBooking } from "../../components/guestapp/GuestAppBookingContext";
-import { guestAppBillExportUrl, guestAppHousekeepingRequest } from "../../lib/guestAppApi";
+import { guestAppBillExportUrl, guestAppHousekeepingRequest, guestAppSubmitNps } from "../../lib/guestAppApi";
 import { guestAppImages } from "../../lib/guestAppImages";
 import { lightingScenes } from "../../lib/guestAppMockData";
 
@@ -28,6 +28,9 @@ export default function GuestAppMe() {
   const [billLoading, setBillLoading] = useState(false);
   const [hkNotes, setHkNotes] = useState("");
   const [hkBusy, setHkBusy] = useState(false);
+  const [npsStars, setNpsStars] = useState(5);
+  const [npsComment, setNpsComment] = useState("");
+  const [npsBusy, setNpsBusy] = useState(false);
 
   const notify = useCallback((msg) => showToast(msg), [showToast]);
 
@@ -68,6 +71,23 @@ export default function GuestAppMe() {
       setHkBusy(false);
     }
   }, [bookingRef, hkNotes, notify, refreshSession]);
+
+  const submitNps = useCallback(async () => {
+    setNpsBusy(true);
+    try {
+      await guestAppSubmitNps({
+        booking_ref: bookingRef.trim(),
+        stars: npsStars,
+        comment: npsComment.trim() || null,
+      });
+      notify("Thanks — your post-stay rating was saved.");
+      setNpsComment("");
+    } catch (e) {
+      notify(e?.message || "Could not save survey.");
+    } finally {
+      setNpsBusy(false);
+    }
+  }, [bookingRef, npsComment, npsStars, notify]);
 
   return (
     <div className="ga-stagger space-y-5">
@@ -168,6 +188,43 @@ export default function GuestAppMe() {
         </div>
         <p className="mt-2 text-[0.65rem] text-white/40">Bill combines room package and current folio lines.</p>
         </div>
+      </section>
+
+      <section className="ga-stagger-item rounded-3xl border border-sky-400/25 bg-sky-950/30 p-4">
+        <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-sky-200/90">After your stay (NPS)</p>
+        <p className="mt-1 text-xs text-white/55">1–5 stars plus one line for the team (synced to ops dashboard).</p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {[1, 2, 3, 4, 5].map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => setNpsStars(s)}
+              className={`min-w-[2.75rem] rounded-xl border px-3 py-2 text-sm font-semibold transition ${
+                npsStars === s ? "border-sky-400/70 bg-sky-500/25 text-sky-100" : "border-white/15 bg-black/25 text-white/70"
+              }`}
+            >
+              {s}★
+            </button>
+          ))}
+        </div>
+        <label className="mt-3 block text-xs text-white/55">
+          One sentence (optional)
+          <input
+            value={npsComment}
+            onChange={(e) => setNpsComment(e.target.value)}
+            className="mt-1 w-full rounded-xl border border-white/15 bg-black/25 px-3 py-2 text-sm text-white"
+            placeholder="What stood out?"
+            maxLength={2000}
+          />
+        </label>
+        <button
+          type="button"
+          disabled={npsBusy}
+          onClick={submitNps}
+          className="mt-3 w-full rounded-2xl bg-sky-600 py-2.5 text-sm font-semibold text-white hover:bg-sky-500 disabled:opacity-50"
+        >
+          {npsBusy ? "Sending…" : "Submit rating"}
+        </button>
       </section>
 
       <section className="ga-stagger-item relative overflow-hidden rounded-3xl border border-rose-400/25 bg-gradient-to-br from-rose-950/50 to-stone-950/60">

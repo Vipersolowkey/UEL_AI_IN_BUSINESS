@@ -1,0 +1,26 @@
+# Blueprint Render — một Web Service Docker: Nginx (SPA) + proxy /api → FastAPI.
+# Khuyến nghị thay vì tách Vercel (chỉ FE) + API riêng: cùng origin, không cần chỉnh CORS phức tạp.
+#
+# Cách bật: đẩy repo lên GitHub → https://dashboard.render.com → New → Blueprint → chọn repo.
+# URL: https://uel-hotel-demo.onrender.com (đổi `name` thì vào Dashboard → Environment sửa CORS_ORIGINS cho khớp).
+#
+# Free: không persistent disk — SQLite trong container có thể trống/mất sau redeploy.
+# Bền hơn: tạo Postgres trên Render, đặt DATABASE_URL, chạy seed một lần (xem DEPLOY.md).
+
+version: "1"
+services:
+  - type: web
+    name: uel-hotel-demo
+    runtime: docker
+    plan: free
+    region: singapore
+    numInstances: 1
+    autoDeployTrigger: commit
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        value: sqlite:////data/app.db
+      - key: CORS_ORIGINS
+        value: https://uel-hotel-demo.onrender.com,http://localhost:8080,http://127.0.0.1:8080

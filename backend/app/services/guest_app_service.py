@@ -455,11 +455,6 @@ def iter_concierge_chat_sse(
         yield sse({"type": "chunk", "content": _concierge_heuristic_reply(message)})
     except Exception as exc:
         logger.exception("concierge_chat_stream failure booking=%s", booking.booking_id)
-        yield sse(
-            {
-                "type": "error",
-                "message": "Concierge AI is unavailable right now.",
-                "detail": str(exc),
-            },
-        )
+        yield sse({"type": "model", "model_used": "heuristic_fallback"})
+        yield sse({"type": "chunk", "content": _concierge_heuristic_reply(message)})
     yield sse({"type": "done"})

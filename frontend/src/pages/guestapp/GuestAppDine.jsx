@@ -39,6 +39,7 @@ export default function GuestAppDine() {
   const [anchorDishId, setAnchorDishId] = useState(dineMenu[0]?.id || "burger");
   const [addOnBusy, setAddOnBusy] = useState(false);
   const [clockHour, setClockHour] = useState(() => new Date().getHours());
+  const [acceptedPolicy, setAcceptedPolicy] = useState(false);
 
   useEffect(() => {
     const id = window.setInterval(() => setClockHour(new Date().getHours()), 5 * 60 * 1000);
@@ -94,6 +95,10 @@ export default function GuestAppDine() {
   const notify = useCallback((msg) => showToast(msg), [showToast]);
 
   const submitReservation = useCallback(async () => {
+    if (!acceptedPolicy) {
+      notify("Please confirm you have read the cancellation and refund policy for dining and in-room services.");
+      return;
+    }
     setSending(true);
     try {
       await guestAppDiningRequest({
@@ -109,9 +114,13 @@ export default function GuestAppDine() {
     } finally {
       setSending(false);
     }
-  }, [allergies, bookingRef, notes, notify, partySize, slotTime]);
+  }, [acceptedPolicy, allergies, bookingRef, notes, notify, partySize, slotTime]);
 
   const addSuggestedToFolio = useCallback(async () => {
+    if (!acceptedPolicy) {
+      notify("Please confirm you have read the cancellation and refund policy for dining and in-room services.");
+      return;
+    }
     if (!ai.addOn) return;
     setAddOnBusy(true);
     try {
@@ -128,7 +137,18 @@ export default function GuestAppDine() {
     } finally {
       setAddOnBusy(false);
     }
-  }, [ai.addOn, ai.dishName, bookingRef, notify, refreshSession]);
+  }, [acceptedPolicy, ai.addOn, ai.dishName, bookingRef, notify, refreshSession]);
+
+  const orderToRoom = useCallback(
+    (dishName) => {
+      if (!acceptedPolicy) {
+        notify("Please confirm you have read the cancellation and refund policy for dining and in-room services.");
+        return;
+      }
+      notify(`Sent to kitchen: ${dishName}`);
+    },
+    [acceptedPolicy, notify],
+  );
 
   return (
     <div className="ga-stagger space-y-4 pb-4">
@@ -140,6 +160,26 @@ export default function GuestAppDine() {
           <p className="text-sm font-semibold text-white">In-room dining · reservations / pre-order</p>
         </div>
       </div>
+
+      <section className="ga-stagger-item rounded-3xl border border-amber-400/25 bg-amber-950/25 p-4">
+        <label className="flex cursor-pointer items-start gap-3 text-sm leading-relaxed text-white/80">
+          <input
+            type="checkbox"
+            checked={acceptedPolicy}
+            onChange={(e) => setAcceptedPolicy(e.target.checked)}
+            className="mt-1 h-4 w-4 shrink-0 rounded border-white/30 bg-black/30 text-emerald-500 focus:ring-emerald-500/40"
+          />
+          <span>
+            <span className="font-semibold text-amber-100/95">Cancellation & refunds (dining / in-room)</span>
+            <span className="block text-xs text-white/60">
+              Orders placed through the app may be charged to your room folio. Cancellations within 30 minutes of the
+              requested slot may incur 50% of the quoted food prep fee; same-day no-shows may be charged in full unless
+              the hotel agrees otherwise in writing. Refunds, when applicable, return to the original payment method
+              within 5–10 business days (demo policy text).
+            </span>
+          </span>
+        </label>
+      </section>
 
       <section className="ga-stagger-item rounded-3xl border border-white/10 bg-white/[0.05] p-4">
         <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-emerald-200/80">Reserve or pre-order</p>
@@ -187,7 +227,7 @@ export default function GuestAppDine() {
           </label>
           <button
             type="button"
-            disabled={sending}
+            disabled={sending || !acceptedPolicy}
             onClick={submitReservation}
             className="w-full rounded-2xl bg-emerald-600 py-3 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-50"
           >
@@ -255,7 +295,7 @@ export default function GuestAppDine() {
         {ai.addOn ? (
           <button
             type="button"
-            disabled={addOnBusy}
+            disabled={addOnBusy || !acceptedPolicy}
             className="mt-3 text-left text-sm font-semibold text-emerald-300 underline decoration-emerald-500/50 underline-offset-2 disabled:opacity-50"
             onClick={addSuggestedToFolio}
           >
@@ -285,8 +325,9 @@ export default function GuestAppDine() {
               </div>
               <button
                 type="button"
-                className="mt-4 w-full rounded-2xl border border-white/15 bg-white/10 py-2.5 text-sm font-semibold text-white hover:bg-white/15"
-                onClick={() => notify(`Sent to kitchen: ${dish.name}`)}
+                disabled={!acceptedPolicy}
+                className="mt-4 w-full rounded-2xl border border-white/15 bg-white/10 py-2.5 text-sm font-semibold text-white hover:bg-white/15 disabled:opacity-50"
+                onClick={() => orderToRoom(dish.name)}
               >
                 Order to room
               </button>

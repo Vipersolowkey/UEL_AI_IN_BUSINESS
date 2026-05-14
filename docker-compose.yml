@@ -1,0 +1,22 @@
+# Chạy bản web đầy đủ (UI + API) trên một cổng — phù hợp VPS / máy chủ riêng.
+# Dữ liệu SQLite lưu trong volume để không mất khi restart container.
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: /api/v1
+    ports:
+      - "8080:80"
+    environment:
+      # SQLite trên volume (một file). Đổi sang Postgres: xem DEPLOY.md
+      DATABASE_URL: sqlite:////data/app.db
+      # Thêm URL công khai (tunnel / Render / domain) qua file .env: CORS_ORIGINS=https://...
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080,http://127.0.0.1:8080}
+    volumes:
+      - hotel_data:/data
+
+volumes:
+  hotel_data:

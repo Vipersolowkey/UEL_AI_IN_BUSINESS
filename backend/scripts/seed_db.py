@@ -18,16 +18,24 @@ if str(BACKEND_DIR) not in sys.path:
 from app.db.session import Base, SessionLocal, engine
 from app.models import (
     AlertThreshold,
+    AnonymousFeedback,
+    AppUsageEvent,
     Booking,
+    BookingInquiry,
     CancellationSummary,
     CompetitorData,
     CountrySummary,
     Guest,
+    GuestAuditLog,
     GuestFolioLine,
     GuestNote,
     GuestTag,
     GuestTimelineEvent,
+    LocalMarketEvent,
     MonthlyRevenueSummary,
+    NpsSurvey,
+    PinnedCompetitor,
+    PromoVoucher,
     Property,
     Room,
     RoomHousekeepingState,
@@ -35,6 +43,7 @@ from app.models import (
     RoomTypePriceRule,
     RoomTypeRatingSummary,
     ServiceRatingSummary,
+    ServiceSlaLog,
     UpsellUsageSummary,
 )
 from app.services.competitor_import import import_multiple_competitor_json_files
@@ -941,6 +950,62 @@ def seed_competitor_data(db) -> None:
     db.add_all(sample_rows)
 
 
+def seed_operational_pulse_anchors(db, p_nt: Property, room_types: dict[str, RoomType]) -> None:
+    """Dedicated rooms + stays tied to date.today() so Overview operational pulse is not all zeros after seed.
+
+    Historical CSV/May-2026 demos use fixed dates; server 'today' may fall outside those windows, especially
+    if the DB was seeded long ago or the machine clock differs from demo assumptions.
+    """
+    today = date.today()
+    rt = room_types.get("A")
+    if rt is None:
+        return
+    r_in = Room(
+        room_number="NT-OPS-PULSE-IN",
+        room_type_id=rt.id,
+        property_id=p_nt.id,
+        status="available",
+    )
+    r_up = Room(
+        room_number="NT-OPS-PULSE-UP",
+        room_type_id=rt.id,
+        property_id=p_nt.id,
+        status="available",
+    )
+    db.add_all([r_in, r_up])
+    db.flush()
+
+    g1 = Guest(full_name="Ops Pulse In-House", email="ops.pulse.in@demo.hotel", country_code="VNM")
+    db.add(g1)
+    db.flush()
+    db.add(
+        Booking(
+            booking_id="ORT-OPS-PULSE-IN",
+            guest_id=g1.id,
+            room_id=r_in.id,
+            check_in=today - timedelta(days=1),
+            check_out=today + timedelta(days=2),
+            status="confirmed",
+            total_price=Decimal("390.00"),
+        ),
+    )
+
+    g2 = Guest(full_name="Ops Pulse Upcoming", email="ops.pulse.up@demo.hotel", country_code="VNM")
+    db.add(g2)
+    db.flush()
+    db.add(
+        Booking(
+            booking_id="ORT-OPS-PULSE-UP",
+            guest_id=g2.id,
+            room_id=r_up.id,
+            check_in=today + timedelta(days=4),
+            check_out=today + timedelta(days=7),
+            status="confirmed",
+            total_price=Decimal("420.00"),
+        ),
+    )
+
+
 def seed_active_demo_bookings(db, rooms: dict[str, Room]) -> None:
     """Overlapping confirmed stays in May 2026 so the occupancy heatmap shows varied night-by-night %."""
     samples = [
@@ -1262,6 +1327,176 @@ def seed_guest_app_experience(db) -> None:
         )
 
 
+def seed_guest_engagement_demo(db) -> None:
+    """Rich demo: NPS, feedback, audits, vouchers, events, app usage, SLA, inquiries."""
+    import random
+    from datetime import datetime, timedelta, timezone
+
+    utc = timezone.utc
+    now = datetime.now(utc)
+
+    if db.get(PinnedCompetitor, 1) is None:
+        db.add(
+            PinnedCompetitor(
+                id=1,
+                competitor_name="Seaside Haven Resort",
+                area_name="Nha Trang",
+                price_hint_vnd=2_190_000,
+                note="Pinned for daily rate shop (seed).",
+            ),
+        )
+
+    voucher_defs = [
+        ("SUNRISE15", "Sunrise 15% room add-on", 200, 0, date.today() + timedelta(days=45), "15% off spa stack"),
+        ("FAMILYBKF", "Family breakfast pack", 150, 0, date.today() + timedelta(days=20), "Kids eat free AM"),
+        ("LONGSTAY4", "4+ nights corridor", 80, 0, date.today() + timedelta(days=90), "Late checkout priority"),
+        ("WALKIN5", "Lobby walk-in 5%", 500, 120, date.today() + timedelta(days=7), "5% same-day — nearly sold out"),
+    ]
+    for code, title, mx, used, exp, lbl in voucher_defs:
+        if db.scalar(select(PromoVoucher.id).where(PromoVoucher.code == code).limit(1)) is None:
+            db.add(PromoVoucher(code=code, title=title, max_uses=mx, used_count=used, expires_on=exp, discount_label=lbl))
+
+    events_seed = [
+        ("Nha Trang", "Sea Festival stage setup", 18, "Beach road partial closure; demand + beachfront."),
+        ("Nha Trang", "Marathon Sunday", 25, "Morning quiet floors; airport transfers busy."),
+        ("Nha Trang", "DJ Sunset Series", 12, "Bar & pool deck peaks 6–10 PM."),
+        ("Nha Trang", "Conference MICE block", 8, "Corporate F&B; lounge breakfast rush."),
+        ("Đà Lạt", "Flower Festival weekend", 30, "City core ADR spike; parking tight."),
+        ("Đà Lạt", "Cool mist trail run", 22, "Early hikers; pack breakfast boxes."),
+    ]
+    for area, title, day_offset, note in events_seed:
+        ed = date.today() + timedelta(days=day_offset)
+        if (
+            db.scalar(
+                select(LocalMarketEvent.id).where(LocalMarketEvent.area_name == area, LocalMarketEvent.title == title).limit(1),
+            )
+            is None
+        ):
+            db.add(
+                LocalMarketEvent(
+                    area_name=area,
+                    title=title,
+                    event_date=ed,
+                    ends_on=ed + timedelta(days=2),
+                    demand_note=note,
+                    expected_lift_pct=random.randint(8, 35),
+                ),
+            )
+
+    refs = list(db.scalars(select(Booking.booking_id).order_by(Booking.booking_id).limit(120)).all())
+    if not refs:
+        refs = ["ORT-2026-0003"]
+
+    for _ in range(72):
+        ref = random.choice(refs)
+        stars = random.choices([5, 4, 3, 2, 1], weights=[0.42, 0.28, 0.12, 0.1, 0.08])[0]
+        cmt = random.choice(
+            [
+                "Great view, slow elevator once.",
+                "Kids loved the pool.",
+                "Would book again.",
+                "AC a bit loud at night.",
+                None,
+                "Breakfast variety exceeded expectations.",
+            ],
+        )
+        # Keep most responses inside the current ISO week so Ops "this week NPS" is populated.
+        created = now - timedelta(days=random.randint(0, 6), hours=random.randint(0, 23), minutes=random.randint(0, 59))
+        db.add(
+            NpsSurvey(
+                booking_ref=ref,
+                stars=stars,
+                comment=cmt,
+                area_name=random.choice(["Nha Trang", "Nha Trang", "Đà Lạt"]),
+                created_at=created,
+            ),
+        )
+
+    fb_msgs = [
+        "Lobby music too loud after 10pm on Friday.",
+        "Please add vegan labels on buffet.",
+        "Shoutout to Linh at reception — super patient.",
+        "Airport transfer was 15 min late but driver apologized.",
+        "Need more umbrellas by the pool.",
+        "Loved the turndown scent.",
+        "Elevator card reader glitch on tower B.",
+        "More high chairs in restaurant please.",
+    ]
+    for _ in range(38):
+        fb_created = now - timedelta(days=random.randint(0, 21), hours=random.randint(0, 23))
+        db.add(
+            AnonymousFeedback(
+                message=random.choice(fb_msgs),
+                area_name=random.choice(["Nha Trang", "Đà Lạt", None]),
+                created_at=fb_created,
+            ),
+        )
+
+    actors = ["Front desk: Mai", "Night audit: Kevin", "Guest self-service", "Ops dashboard: demo user", "HK supervisor"]
+    actions = ["folio_view", "folio_view", "folio_view", "voucher_redeem", "folio_view"]
+    for _ in range(55):
+        au_created = now - timedelta(days=random.randint(0, 14), hours=random.randint(0, 23))
+        db.add(
+            GuestAuditLog(
+                booking_ref=random.choice(refs),
+                action=random.choice(actions),
+                actor_label=random.choice(actors),
+                detail=random.choice([None, "export", "preview", "manager review"]),
+                created_at=au_created,
+            ),
+        )
+
+    ev_keys = [
+        "screen_view",
+        "screen_view",
+        "open_offers",
+        "open_dine",
+        "concierge_open",
+        "timeline_tap",
+        "bill_preview",
+        "push_notification_open",
+    ]
+    for _ in range(420):
+        db.add(
+            AppUsageEvent(
+                event_key=random.choice(ev_keys),
+                booking_ref=random.choice([None, random.choice(refs)]),
+                duration_ms=random.choice([None, None, 1200, 3400, 8900, 21000]),
+                created_at=now - timedelta(hours=random.randint(0, 168)),
+            ),
+        )
+
+    for _ in range(110):
+        req = now - timedelta(hours=random.randint(0, 300))
+        mins = Decimal(str(round(random.uniform(4.0, 95.0), 1)))
+        fulfilled = req + timedelta(minutes=float(mins))
+        db.add(
+            ServiceSlaLog(
+                service_type=random.choice(["dining_queue", "housekeeping", "concierge", "spa_booking"]),
+                booking_ref=random.choice(refs),
+                requested_at=req,
+                fulfilled_at=fulfilled,
+                response_minutes=mins,
+            ),
+        )
+
+    for i in range(18):
+        ci = date.today() + timedelta(days=7 + i * 2)
+        co = ci + timedelta(days=random.randint(2, 6))
+        db.add(
+            BookingInquiry(
+                full_name=f"Demo Guest {i + 1}",
+                email=f"demo.guest{i}@example.com",
+                check_in=ci,
+                check_out=co,
+                guests=random.randint(1, 5),
+                room_pref=random.choice(["Studio", "Family", "Sea view", None]),
+                notes=random.choice([None, "Late arrival after 11pm", "High floor please"]),
+                area_name=random.choice(["Nha Trang", "Đà Lạt"]),
+            ),
+        )
+
+
 def main() -> None:
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
@@ -1285,6 +1520,8 @@ def main() -> None:
         seed_guest_crm_demo(db)
         seed_guest_insights_rollups(db, room_types)
         seed_guest_app_experience(db)
+        seed_guest_engagement_demo(db)
+        seed_operational_pulse_anchors(db, p_nt, room_types)
         db.commit()
 
     print("Database seeded successfully.")

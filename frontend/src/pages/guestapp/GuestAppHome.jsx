@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import GuestAppImg from "../../components/guestapp/GuestAppImg";
 import { useGuestAppBooking } from "../../components/guestapp/GuestAppBookingContext";
-import { guestAppTimelineStep } from "../../lib/guestAppApi";
+import { guestAppTimelineStep, guestAppTimeUpsells } from "../../lib/guestAppApi";
 import { guestAppImages } from "../../lib/guestAppImages";
 import { fetchCurrentWeather, isRainyWmoCode } from "../../lib/openMeteoWeather";
 
@@ -22,8 +22,17 @@ export default function GuestAppHome() {
   const [weather, setWeather] = useState(null);
   const [weatherError, setWeatherError] = useState("");
   const [weatherLoading, setWeatherLoading] = useState(true);
+  const [timeUpsells, setTimeUpsells] = useState(null);
 
   const notify = useCallback((msg) => showToast(msg), [showToast]);
+
+  useEffect(() => {
+    const ac = new AbortController();
+    guestAppTimeUpsells(ac.signal)
+      .then(setTimeUpsells)
+      .catch(() => setTimeUpsells(null));
+    return () => ac.abort();
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -154,6 +163,31 @@ export default function GuestAppHome() {
         ) : null}
         </div>
       </section>
+
+      {timeUpsells?.upsells?.length ? (
+        <section className="ga-stagger-item rounded-3xl border border-teal-400/20 bg-teal-950/30 p-4">
+          <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-teal-200/85">Right now for you</p>
+          <p className="mt-1 text-xs text-white/55">
+            Time-based upsell rules (morning / afternoon / evening). Bucket:{" "}
+            <span className="font-semibold text-teal-100">{timeUpsells.bucket}</span> · local hour{" "}
+            {timeUpsells.local_hour_used}
+          </p>
+          <div className="mt-3 grid gap-2">
+            {timeUpsells.upsells.map((u) => (
+              <button
+                key={u.id}
+                type="button"
+                className="guest-app-card-hover rounded-2xl border border-white/10 bg-black/25 px-3 py-3 text-left transition hover:border-teal-400/35"
+                onClick={() => notify(`${u.title} — request noted (demo).`)}
+              >
+                <p className="text-sm font-semibold text-white">{u.title}</p>
+                <p className="mt-1 text-xs text-white/60">{u.body}</p>
+                <p className="mt-2 text-[0.6rem] uppercase tracking-wide text-white/35">{u.channel}</p>
+              </button>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <section className="ga-stagger-item guest-app-card-hover overflow-hidden rounded-3xl border border-emerald-400/25 bg-emerald-950/40 shadow-[0_12px_40px_rgba(0,0,0,0.2)]">
         <div className="relative h-28 w-full shrink-0">
