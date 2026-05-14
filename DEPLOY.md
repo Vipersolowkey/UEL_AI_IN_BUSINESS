@@ -84,6 +84,8 @@ Repo có [`render.yaml`](render.yaml) (Web Service `docker` + env mẫu).
 
 **Gói free:** không có persistent disk; SQLite có thể **trống hoặc mất** sau redeploy. Muốn dữ liệu bền: tạo **PostgreSQL** trên Render, đặt `DATABASE_URL` trỏ tới Postgres, chạy `seed_db` một lần.
 
+Nếu log báo **`unable to open database file`**: nguyên nhân thường là thư mục `/data` chưa tồn tại trong container. Bản image hiện tại tạo `/data` ở **entrypoint** + **Dockerfile**; hãy **commit + push** rồi **Manual Deploy** lại trên Render.
+
 ---
 
 ## AI (Groq / Ollama)
